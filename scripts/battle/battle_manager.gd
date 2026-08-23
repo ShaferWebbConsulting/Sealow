@@ -226,7 +226,7 @@ func _resolve_round(octo_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHand
 
 	if result == 1:
 		var damage: int = DiceRules.calculate_damage(octo_hand, crab_hand)
-		roll_result_label.text = "%s beats %s!\n\n🐙 LITTLE OCTO WINS THE ROUND" % [octo_hand.display_name, crab_hand.display_name]
+		roll_result_label.text = "%s\n\n🐙 LITTLE OCTO WINS THE ROUND" % _format_round_summary(octo_hand, crab_hand)
 		apply_damage_to_crab(damage)
 		state_label.text = "Crab takes %d damage!" % damage
 
@@ -235,7 +235,7 @@ func _resolve_round(octo_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHand
 			return
 	else:
 		var damage: int = DiceRules.calculate_damage(crab_hand, octo_hand)
-		roll_result_label.text = "%s beats %s!\n\n🦀 CRAB WINS THE ROUND" % [crab_hand.display_name, octo_hand.display_name]
+		roll_result_label.text = "%s\n\n🦀 CRAB WINS THE ROUND" % _format_round_summary(crab_hand, octo_hand)
 		apply_damage_to_player(damage)
 		state_label.text = "Little Octo takes %d damage!" % damage
 
@@ -247,6 +247,17 @@ func _resolve_round(octo_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHand
 	if exiting_scene or not is_inside_tree():
 		return
 	_start_next_round()
+
+
+## Builds the "X beats Y" summary shown above the round result. When both
+## hands are pair hands that share the same pair value, calls that out
+## explicitly before comparing the unmatched (high) die, since that's the
+## tiebreaker that actually decided the round.
+func _format_round_summary(winner_hand: DiceRules.DiceHand, loser_hand: DiceRules.DiceHand) -> String:
+	if winner_hand.hand_type == DiceRules.HandType.POINT and loser_hand.hand_type == DiceRules.HandType.POINT and winner_hand.pair_value == loser_hand.pair_value:
+		return "Both have PAIR %d\n\nHIGH %d beats HIGH %d!" % [winner_hand.pair_value, winner_hand.point_value, loser_hand.point_value]
+
+	return "%s beats %s!" % [winner_hand.display_name, loser_hand.display_name]
 
 
 func _start_next_round() -> void:
