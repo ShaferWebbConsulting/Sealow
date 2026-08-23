@@ -38,6 +38,11 @@ var exiting_scene: bool = false
 ## if the victory panel's button is pressed repeatedly.
 var victory_reward_given: bool = false
 
+## Tracks the currently running HP bar tween per ProgressBar so a rapid
+## sequence of damage events never animates the same bar with overlapping
+## tweens (which would cause the fill to jitter/snap).
+var _hp_bar_tweens: Dictionary = {}
+
 @onready var message_label: Label = %MessageLabel
 @onready var octo_hp_label: Label = %OctoHpLabel
 @onready var crab_hp_label: Label = %CrabHpLabel
@@ -138,9 +143,16 @@ func update_ui() -> void:
 
 ## Animates a health bar's ProgressBar value toward `new_value` rather than
 ## snapping instantly, so HP loss reads as a clear, gentle visual change.
+## Kills any tween already animating this bar first so rapid successive
+## damage events can never leave overlapping tweens fighting over the value.
 func _animate_hp_bar(bar: ProgressBar, new_value: int) -> void:
+	var existing_tween: Tween = _hp_bar_tweens.get(bar)
+	if existing_tween != null and existing_tween.is_valid():
+		existing_tween.kill()
+
 	var tween: Tween = create_tween()
 	tween.tween_property(bar, "value", float(new_value), HP_TWEEN_DURATION)
+	_hp_bar_tweens[bar] = tween
 
 
 func _on_roll_pressed() -> void:
