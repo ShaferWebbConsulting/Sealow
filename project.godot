@@ -22,6 +22,11 @@ config/icon="res://assets/ui/icon.svg"
 [autoload]
 
 SceneManager="*res://scripts/systems/scene_manager.gd"
+SaveManager="*res://scripts/systems/save_manager.gd"
+
+[gui]
+
+theme/custom="res://assets/theme/sealow_theme.tres"
 
 [display]
 

@@ -1,6 +1,18 @@
-[gd_scene format=3 uid="uid://mpvfwub5de0d"]
+[gd_scene load_steps=3 format=3 uid="uid://mpvfwub5de0d"]
 
 [ext_resource type="Script" uid="uid://c23kmacodba8u" path="res://scripts/main/main_menu.gd" id="1_l4gfr"]
+[ext_resource type="Theme" uid="uid://b6q1s0p8m2w3x" path="res://assets/theme/sealow_theme.tres" id="2_theme"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_shells"]
+bg_color = Color(0.0784314, 0.156863, 0.207843, 0.85)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
 
 [node name="MainMenu" type="Control" unique_id=842964234]
 layout_mode = 3
@@ -9,6 +21,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_theme")
 script = ExtResource("1_l4gfr")
 
 [node name="Background" type="ColorRect" parent="." unique_id=299336228]
@@ -19,6 +32,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0431373, 0.156863, 0.247059, 1)
+
+[node name="BackgroundDeep" type="ColorRect" parent="." unique_id=119640831]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 0.55
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.0235294, 0.0862745, 0.145098, 1)
 
 [node name="SafeArea" type="MarginContainer" parent="." unique_id=850538485]
 layout_mode = 1
@@ -51,7 +74,7 @@ size_flags_vertical = 3
 [node name="Octo" type="Label" parent="SafeArea/Content" unique_id=374372413]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 96
+theme_override_font_sizes/font_size = 104
 text = "🐙"
 horizontal_alignment = 1
 
@@ -63,11 +86,17 @@ text = "LITTLE OCTO
 Lv. 1"
 horizontal_alignment = 1
 
-[node name="Shells" type="Label" parent="SafeArea/Content" unique_id=765298598]
+[node name="ShellsPanel" type="PanelContainer" parent="SafeArea/Content" unique_id=26955092]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 30
-text = "🐚 Shells: 0"
+theme_override_styles/panel = SubResource("StyleBoxFlat_shells")
+
+[node name="Shells" type="Label" parent="SafeArea/Content/ShellsPanel" unique_id=765298598]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 28
+text = "🐚 0 Shells"
 horizontal_alignment = 1
 
 [node name="SpacerBottom" type="Control" parent="SafeArea/Content" unique_id=1223825744]
@@ -83,9 +112,166 @@ theme_override_font_sizes/font_size = 42
 text = "DIVE"
 
 [node name="SettingsButton" type="Button" parent="SafeArea/Content" unique_id=28326919]
-custom_minimum_size = Vector2(0, 72)
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "⚙ SETTINGS"
+
+[node name="SettingsPanel" type="Control" parent="." unique_id=796333790]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="SettingsPanel" unique_id=295410485]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0117647, 0.0470588, 0.0784314, 0.92)
+
+[node name="SafeArea" type="MarginContainer" parent="SettingsPanel" unique_id=263050628]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 72
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 48
+
+[node name="VBox" type="VBoxContainer" parent="SettingsPanel/SafeArea" unique_id=239770711]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="SettingsPanel/SafeArea/VBox" unique_id=149927706]
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 36
+text = "SETTINGS"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="SettingsPanel/SafeArea/VBox" unique_id=790879946]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RowsVBox" type="VBoxContainer" parent="SettingsPanel/SafeArea/VBox/Scroll" unique_id=110153353]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="MusicRow" type="HBoxContainer" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox" unique_id=726700539]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/MusicRow" unique_id=795385932]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
+text = "Music"
+
+[node name="MusicToggle" type="CheckButton" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/MusicRow" unique_id=958070516]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "ON"
+
+[node name="SfxRow" type="HBoxContainer" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox" unique_id=585682861]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/SfxRow" unique_id=93449856]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Sound Effects"
+
+[node name="SfxToggle" type="CheckButton" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/SfxRow" unique_id=634136506]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "ON"
+
+[node name="VibrationRow" type="HBoxContainer" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox" unique_id=453135110]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/VibrationRow" unique_id=34226396]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Vibration"
+
+[node name="VibrationToggle" type="CheckButton" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/VibrationRow" unique_id=32094523]
+layout_mode = 2
 disabled = true
-text = "⚙ Settings"
+text = "OFF"
+
+[node name="MockLabel1" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/VibrationRow" unique_id=100704502]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.941176, 0.760784, 0.239216, 1)
+text = "MOCK"
+
+[node name="DifficultyRow" type="HBoxContainer" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox" unique_id=234860738]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/DifficultyRow" unique_id=249917734]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Difficulty"
+
+[node name="ValueLabel" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/DifficultyRow" unique_id=542721108]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Normal"
+
+[node name="MockLabel2" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/DifficultyRow" unique_id=646512689]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.941176, 0.760784, 0.239216, 1)
+text = "MOCK"
+
+[node name="OceanThemeRow" type="HBoxContainer" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox" unique_id=28592780]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/OceanThemeRow" unique_id=602732297]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Ocean Theme"
+
+[node name="ValueLabel" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/OceanThemeRow" unique_id=213600298]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Deep Sea"
+
+[node name="MockLabel3" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox/OceanThemeRow" unique_id=768920204]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.941176, 0.760784, 0.239216, 1)
+text = "MOCK"
+
+[node name="MockNote" type="Label" parent="SettingsPanel/SafeArea/VBox/Scroll/RowsVBox" unique_id=697908098]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
+text = "Vibration, Difficulty and Ocean Theme are mock settings for now — they don't change gameplay yet."
+autowrap_mode = 2
+
+[node name="SettingsBackButton" type="Button" parent="SettingsPanel/SafeArea/VBox" unique_id=753141955]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "← BACK"
