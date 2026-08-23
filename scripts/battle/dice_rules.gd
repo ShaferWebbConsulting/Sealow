@@ -13,7 +13,7 @@ extends RefCounted
 enum HandType {
 	NO_POINT, ## Non-scoring roll. Should never survive to comparison; auto-rerolled.
 	WASHED_OUT, ## 1-2-3, weakest scoring hand.
-	POINT, ## Pair + unmatched die. point_value holds the unmatched die (1-6).
+	POINT, ## Pair + unmatched die. pair_value holds the pair, point_value holds the unmatched die (1-6).
 	TRIPLE, ## Three matching dice. point_value holds the triple's face value (1-6).
 	TIDAL_ROLL, ## 4-5-6, strongest possible hand.
 }
@@ -23,12 +23,17 @@ const MAX_REROLLS: int = 20
 ## Result of evaluating a single three-dice roll.
 class DiceHand:
 	var hand_type: int
+	## For POINT hands, the value of the matching pair (1-6). Ranked before
+	## point_value so e.g. PAIR 3 always beats PAIR 1 regardless of the
+	## unmatched die. Unused (left at -1) for non-POINT hand types.
+	var pair_value: int
 	var point_value: int
 	var dice_values: Array[int]
 	var display_name: String
 
-	func _init(p_hand_type: int, p_point_value: int, p_dice_values: Array[int], p_display_name: String) -> void:
+	func _init(p_hand_type: int, p_point_value: int, p_dice_values: Array[int], p_display_name: String, p_pair_value: int = -1) -> void:
 		hand_type = p_hand_type
+		pair_value = p_pair_value
 		point_value = p_point_value
 		dice_values = p_dice_values
 		display_name = p_display_name
@@ -59,22 +64,30 @@ static func evaluate_hand(dice: Array[int]) -> DiceHand:
 		return DiceHand.new(HandType.TRIPLE, triple_value, sorted_dice, "TRIPLE %d" % triple_value)
 
 	if sorted_dice[0] == sorted_dice[1]:
+		var pair: int = sorted_dice[0]
 		var point: int = sorted_dice[2]
-		return DiceHand.new(HandType.POINT, point, sorted_dice, "POINT %d" % point)
+		return DiceHand.new(HandType.POINT, point, sorted_dice, "PAIR %d • HIGH %d" % [pair, point], pair)
 
 	if sorted_dice[1] == sorted_dice[2]:
+		var pair_val: int = sorted_dice[1]
 		var point_val: int = sorted_dice[0]
-		return DiceHand.new(HandType.POINT, point_val, sorted_dice, "POINT %d" % point_val)
+		return DiceHand.new(HandType.POINT, point_val, sorted_dice, "PAIR %d • HIGH %d" % [pair_val, point_val], pair_val)
 
 	return DiceHand.new(HandType.NO_POINT, -1, sorted_dice, "NO POINT")
 
 
 ## Builds the safety-fallback hand used when MAX_REROLLS is exhausted without
-## a scoring hand. Treats the highest die rolled as the point so the round
-## can still resolve. Should almost never be needed in practice.
+## a scoring hand. Treats the highest die as a pseudo-pair value and the
+## second-highest die as the point/tiebreaker, so the round can still resolve
+## using the same pair-first comparison as a real POINT hand, and two
+## fallback hands still tiebreak meaningfully. Should almost never be needed
+## in practice.
 static func fallback_hand(no_point_hand: DiceHand) -> DiceHand:
-	var highest: int = no_point_hand.dice_values.max()
-	return DiceHand.new(HandType.POINT, highest, no_point_hand.dice_values, "POINT %d" % highest)
+	var sorted_dice: Array[int] = no_point_hand.dice_values.duplicate()
+	sorted_dice.sort()
+	var highest: int = sorted_dice[2]
+	var second_highest: int = sorted_dice[1]
+	return DiceHand.new(HandType.POINT, second_highest, no_point_hand.dice_values, "PAIR %d • HIGH %d" % [highest, second_highest], highest)
 
 
 ## Compares two evaluated hands.
@@ -82,6 +95,12 @@ static func fallback_hand(no_point_hand: DiceHand) -> DiceHand:
 static func compare_hands(player_hand: DiceHand, enemy_hand: DiceHand) -> int:
 	if player_hand.hand_type != enemy_hand.hand_type:
 		return 1 if player_hand.hand_type > enemy_hand.hand_type else -1
+
+	# Pair hands must be ranked by pair value first, and only fall back to
+	# the unmatched die (point_value) as a tiebreaker when both pairs match.
+	if player_hand.hand_type == HandType.POINT:
+		if player_hand.pair_value != enemy_hand.pair_value:
+			return 1 if player_hand.pair_value > enemy_hand.pair_value else -1
 
 	if player_hand.point_value != enemy_hand.point_value:
 		return 1 if player_hand.point_value > enemy_hand.point_value else -1
