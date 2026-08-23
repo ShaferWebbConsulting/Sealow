@@ -52,6 +52,37 @@ theme_override_font_sizes/font_size = 28
 text = "HP 10 / 10"
 horizontal_alignment = 1
 
+[node name="CrabDiceRow" type="HBoxContainer" parent="SafeArea/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+alignment = 1
+theme_override_constants/separation = 24
+
+[node name="CrabDie1" type="Label" parent="SafeArea/Content/CrabDiceRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "⚀"
+horizontal_alignment = 1
+
+[node name="CrabDie2" type="Label" parent="SafeArea/Content/CrabDiceRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "⚀"
+horizontal_alignment = 1
+
+[node name="CrabDamageLabel" type="Label" parent="SafeArea/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
+text = "-0"
+horizontal_alignment = 1
+visible = false
+
 [node name="VsSpacer" type="Control" parent="SafeArea/Content"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 60)
@@ -82,6 +113,53 @@ theme_override_font_sizes/font_size = 28
 text = "HP 12 / 12"
 horizontal_alignment = 1
 
+[node name="OctoDiceRow" type="HBoxContainer" parent="SafeArea/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="OctoDie1" type="Label" parent="SafeArea/Content/OctoDiceRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "⚀"
+horizontal_alignment = 1
+
+[node name="OctoDie2" type="Label" parent="SafeArea/Content/OctoDiceRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "⚀"
+horizontal_alignment = 1
+
+[node name="OctoDie3" type="Label" parent="SafeArea/Content/OctoDiceRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "⚀"
+horizontal_alignment = 1
+
+[node name="OctoDamageLabel" type="Label" parent="SafeArea/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
+text = "-0"
+horizontal_alignment = 1
+visible = false
+
+[node name="RollResultLabel" type="Label" parent="SafeArea/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 22
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 2
+
 [node name="StateLabel" type="Label" parent="SafeArea/Content"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -103,6 +181,129 @@ theme_override_font_sizes/font_size = 40
 text = "ROLL"
 
 [node name="ReturnHomeButton" type="Button" parent="SafeArea/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "RETURN HOME"
+
+[node name="VictoryPanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="VictoryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0117647, 0.0470588, 0.0784314, 0.85)
+
+[node name="Center" type="CenterContainer" parent="VictoryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="VictoryPanel/Center"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="VictoryPanel/Center/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 44
+text = "VICTORY!"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="VictoryPanel/Center/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "The Crab retreats!"
+horizontal_alignment = 1
+
+[node name="ShellsEarnedLabel" type="Label" parent="VictoryPanel/Center/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 26
+text = "+10 Shells"
+horizontal_alignment = 1
+
+[node name="VictoryReturnButton" type="Button" parent="VictoryPanel/Center/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "RETURN HOME"
+
+[node name="DefeatPanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="DefeatPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0117647, 0.0470588, 0.0784314, 0.85)
+
+[node name="Center" type="CenterContainer" parent="DefeatPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="DefeatPanel/Center"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="DefeatPanel/Center/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 36
+text = "THE DEEP CLAIMED YOU"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Subtitle" type="Label" parent="DefeatPanel/Center/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "The Crab wins this round."
+horizontal_alignment = 1
+
+[node name="DefeatRetryButton" type="Button" parent="DefeatPanel/Center/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "TRY AGAIN"
+
+[node name="DefeatReturnButton" type="Button" parent="DefeatPanel/Center/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
