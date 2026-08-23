@@ -147,9 +147,11 @@ func perform_enemy_turn() -> void:
 		return
 
 	var total: int = 0
+	var addends: Array[String] = []
 	for value in results:
 		total += value
-	roll_result_label.text = "Crab rolled %d + %d = %d" % [results[0], results[1], total]
+		addends.append(str(value))
+	roll_result_label.text = "Crab rolled %s = %d" % [" + ".join(addends), total]
 
 	var damage: int = calculate_enemy_damage(total)
 	apply_damage_to_player(damage)
@@ -176,19 +178,25 @@ func roll_dice(count: int) -> Array[int]:
 
 func animate_dice(labels: Array[Label], results: Array[int]) -> void:
 	var active_labels: Array[Label] = labels.slice(0, results.size())
+	var pulse_tweens: Array[Tween] = []
 	for label in active_labels:
 		label.visible = true
+		pulse_tweens.append(null)
 
 	var duration: float = 0.6
 	var step: float = 0.08
 	var elapsed: float = 0.0
 
 	while elapsed < duration:
-		for label in active_labels:
+		for i in active_labels.size():
+			var label: Label = active_labels[i]
 			label.text = DICE_FACES[randi_range(0, 5)]
+			if pulse_tweens[i] != null and pulse_tweens[i].is_valid():
+				pulse_tweens[i].kill()
 			var tween: Tween = create_tween()
 			tween.tween_property(label, "scale", Vector2(1.15, 1.15), step * 0.5)
 			tween.tween_property(label, "scale", Vector2(1.0, 1.0), step * 0.5)
+			pulse_tweens[i] = tween
 		await get_tree().create_timer(step).timeout
 		if exiting_scene or not is_inside_tree():
 			return
