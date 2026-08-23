@@ -1,5 +1,4 @@
 extends Node
-class_name SceneManager
 
 const MAIN_MENU_SCENE: String = "res://scenes/main/MainMenu.tscn"
 const BATTLE_SCENE: String = "res://scenes/battle/Battle.tscn"
