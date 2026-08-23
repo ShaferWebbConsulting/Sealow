@@ -73,6 +73,21 @@ theme_override_font_sizes/font_size = 40
 text = "⚀"
 horizontal_alignment = 1
 
+[node name="CrabDie3" type="Label" parent="SafeArea/Content/CrabDiceRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "⚀"
+horizontal_alignment = 1
+
+[node name="CrabHandLabel" type="Label" parent="SafeArea/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 26
+text = ""
+horizontal_alignment = 1
+
 [node name="CrabDamageLabel" type="Label" parent="SafeArea/Content"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -141,6 +156,14 @@ theme_override_font_sizes/font_size = 40
 text = "⚀"
 horizontal_alignment = 1
 
+[node name="OctoHandLabel" type="Label" parent="SafeArea/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 26
+text = ""
+horizontal_alignment = 1
+
 [node name="OctoDamageLabel" type="Label" parent="SafeArea/Content"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -180,13 +203,25 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 40
 text = "ROLL"
 
-[node name="ReturnHomeButton" type="Button" parent="SafeArea/Content"]
+[node name="BottomRow" type="HBoxContainer" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 16
+
+[node name="ReturnHomeButton" type="Button" parent="SafeArea/Content/BottomRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "RETURN HOME"
+
+[node name="RulesButton" type="Button" parent="SafeArea/Content/BottomRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "?"
 
 [node name="VictoryPanel" type="Control" parent="."]
 unique_name_in_owner = true
@@ -310,3 +345,70 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "RETURN HOME"
+
+[node name="RulesPanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="RulesPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0117647, 0.0470588, 0.0784314, 0.9)
+
+[node name="Center" type="CenterContainer" parent="RulesPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="RulesPanel/Center"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="RulesPanel/Center/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 32
+text = "HOW TO PLAY"
+horizontal_alignment = 1
+
+[node name="Body" type="Label" parent="RulesPanel/Center/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 20
+text = "🌊 4-5-6
+Tidal Roll — strongest hand
+
+🎲 Triple
+Three matching dice
+
+🎯 Pair + Point
+The unmatched die is your score
+
+💀 1-2-3
+Washed Out — weakest hand
+
+Higher hand wins the round.
+Win rounds to reduce your opponent's HP."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="RulesCloseButton" type="Button" parent="RulesPanel/Center/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "CLOSE"

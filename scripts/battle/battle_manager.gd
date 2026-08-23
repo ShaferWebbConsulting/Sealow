@@ -1,10 +1,11 @@
 extends Control
 
+const DiceRules = preload("res://scripts/battle/dice_rules.gd")
+
 const OCTO_MAX_HP: int = 12
 const CRAB_MAX_HP: int = 10
-const CRAB_ARMOR: int = 1
 const OCTO_DICE_COUNT: int = 3
-const CRAB_DICE_COUNT: int = 2
+const CRAB_DICE_COUNT: int = 3
 const VICTORY_SHELLS: int = 10
 
 const DICE_FACES: Array[String] = [
@@ -16,11 +17,13 @@ const DICE_FACES: Array[String] = [
 	"⚅",
 ]
 
+## Only BattleState.PLAYER_TURN allows the Roll button to be pressed. Every
+## other state means a turn is currently animating/resolving.
 enum BattleState {
 	PLAYER_TURN,
 	PLAYER_ROLLING,
-	ENEMY_TURN,
 	ENEMY_ROLLING,
+	RESOLVING_ROUND,
 	VICTORY,
 	DEFEAT,
 }
@@ -36,9 +39,13 @@ var exiting_scene: bool = false
 @onready var crab_hp_label: Label = %CrabHpLabel
 @onready var roll_button: Button = %RollButton
 @onready var return_button: Button = %ReturnHomeButton
+@onready var rules_button: Button = %RulesButton
 
 @onready var octo_dice: Array[Label] = [%OctoDie1, %OctoDie2, %OctoDie3]
-@onready var crab_dice: Array[Label] = [%CrabDie1, %CrabDie2]
+@onready var crab_dice: Array[Label] = [%CrabDie1, %CrabDie2, %CrabDie3]
+
+@onready var octo_hand_label: Label = %OctoHandLabel
+@onready var crab_hand_label: Label = %CrabHandLabel
 
 @onready var crab_damage_label: Label = %CrabDamageLabel
 @onready var octo_damage_label: Label = %OctoDamageLabel
@@ -51,6 +58,9 @@ var exiting_scene: bool = false
 @onready var defeat_retry_button: Button = %DefeatRetryButton
 @onready var defeat_return_button: Button = %DefeatReturnButton
 
+@onready var rules_panel: Control = %RulesPanel
+@onready var rules_close_button: Button = %RulesCloseButton
+
 
 func _ready() -> void:
 	roll_button.pressed.connect(_on_roll_pressed)
@@ -58,6 +68,8 @@ func _ready() -> void:
 	victory_return_button.pressed.connect(_on_return_home_pressed)
 	defeat_return_button.pressed.connect(_on_return_home_pressed)
 	defeat_retry_button.pressed.connect(_on_try_again_pressed)
+	rules_button.pressed.connect(_on_rules_pressed)
+	rules_close_button.pressed.connect(_on_rules_close_pressed)
 	start_battle()
 
 
@@ -72,9 +84,12 @@ func start_battle() -> void:
 
 	victory_panel.visible = false
 	defeat_panel.visible = false
+	rules_panel.visible = false
 	crab_damage_label.visible = false
 	octo_damage_label.visible = false
 	roll_result_label.text = ""
+	octo_hand_label.text = ""
+	crab_hand_label.text = ""
 
 	_reset_dice(crab_dice)
 	_reset_dice(octo_dice)
@@ -98,82 +113,146 @@ func update_ui() -> void:
 func _on_roll_pressed() -> void:
 	if state != BattleState.PLAYER_TURN:
 		return
-	roll_button.disabled = true
-	perform_player_turn()
+	perform_round()
 
 
-func perform_player_turn() -> void:
+func _on_rules_pressed() -> void:
+	rules_panel.visible = true
+
+
+func _on_rules_close_pressed() -> void:
+	rules_panel.visible = false
+
+
+## Runs one full SeaLow round: Octo rolls, Crab rolls, hands are compared,
+## and the loser takes damage. Guards against overlapping/duplicate rounds
+## by immediately leaving PLAYER_TURN before any awaits happen.
+func perform_round() -> void:
 	state = BattleState.PLAYER_ROLLING
-	state_label.text = "I'm rolling..."
 	roll_result_label.text = ""
+	octo_hand_label.text = ""
+	crab_hand_label.text = ""
+	state_label.text = "Little Octo is rolling..."
 	update_ui()
 
-	var results: Array[int] = roll_dice(OCTO_DICE_COUNT)
-	await animate_dice(octo_dice, results)
+	var octo_hand: DiceRules.DiceHand = await _roll_and_animate(octo_dice, OCTO_DICE_COUNT, "Little Octo")
 	if exiting_scene or not is_inside_tree():
 		return
 
-	var total: int = 0
-	for value in results:
-		total += value
-	roll_result_label.text = "You rolled %d!" % total
+	octo_hand_label.text = _format_hand_display(octo_hand)
+	state_label.text = "Little Octo rolled %s" % octo_hand.display_name
 
-	var damage: int = calculate_player_damage(total)
-	apply_damage_to_crab(damage)
-
-	if crab_hp <= 0:
-		show_victory()
+	await get_tree().create_timer(0.6).timeout
+	if exiting_scene or not is_inside_tree():
 		return
+
+	state = BattleState.ENEMY_ROLLING
+	state_label.text = "Crab is rolling..."
+	update_ui()
+
+	var crab_hand: DiceRules.DiceHand = await _roll_and_animate(crab_dice, CRAB_DICE_COUNT, "Crab")
+	if exiting_scene or not is_inside_tree():
+		return
+
+	crab_hand_label.text = _format_hand_display(crab_hand)
+	state_label.text = "Crab rolled %s" % crab_hand.display_name
+
+	state = BattleState.RESOLVING_ROUND
+	update_ui()
+
+	await get_tree().create_timer(0.4).timeout
+	if exiting_scene or not is_inside_tree():
+		return
+
+	_resolve_round(octo_hand, crab_hand)
+
+
+## Rolls dice (auto-rerolling NO_POINT hands) and animates the result.
+## Returns the final scoring DiceHand.
+func _roll_and_animate(labels: Array[Label], count: int, creature_name: String) -> DiceRules.DiceHand:
+	var attempts: int = 0
+	var raw_dice: Array[int] = DiceRules.roll_dice(count)
+	var hand: DiceRules.DiceHand = DiceRules.evaluate_hand(raw_dice)
+
+	await animate_dice(labels, raw_dice)
+	if exiting_scene or not is_inside_tree():
+		return hand
+
+	while hand.hand_type == DiceRules.HandType.NO_POINT and attempts < DiceRules.MAX_REROLLS:
+		state_label.text = "%s: No point — rolling again..." % creature_name
+		await get_tree().create_timer(0.25).timeout
+		if exiting_scene or not is_inside_tree():
+			return hand
+
+		raw_dice = DiceRules.roll_dice(count)
+		hand = DiceRules.evaluate_hand(raw_dice)
+		await animate_dice(labels, raw_dice)
+		if exiting_scene or not is_inside_tree():
+			return hand
+		attempts += 1
+
+	if hand.hand_type == DiceRules.HandType.NO_POINT:
+		hand = DiceRules.fallback_hand(hand)
+
+	return hand
+
+
+func _format_hand_display(hand: DiceRules.DiceHand) -> String:
+	match hand.hand_type:
+		DiceRules.HandType.TIDAL_ROLL:
+			return "🌊 TIDAL ROLL! 🌊"
+		DiceRules.HandType.WASHED_OUT:
+			return "💀 WASHED OUT!"
+		_:
+			return hand.display_name
+
+
+func _resolve_round(octo_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHand) -> void:
+	# Defensive guard: _roll_and_animate can return early with an unresolved
+	# NO_POINT hand if the scene is exiting mid-round. Never score that case.
+	if octo_hand.hand_type == DiceRules.HandType.NO_POINT or crab_hand.hand_type == DiceRules.HandType.NO_POINT:
+		return
+
+	var result: int = DiceRules.compare_hands(octo_hand, crab_hand)
+
+	if result == 0:
+		roll_result_label.text = "TIE!\nNobody takes damage."
+		state_label.text = "Tie! Nobody takes damage."
+		await get_tree().create_timer(0.75).timeout
+		if exiting_scene or not is_inside_tree():
+			return
+		_start_next_round()
+		return
+
+	if result == 1:
+		var damage: int = DiceRules.calculate_damage(octo_hand, crab_hand)
+		roll_result_label.text = "%s beats %s!\n\n🐙 LITTLE OCTO WINS THE ROUND" % [octo_hand.display_name, crab_hand.display_name]
+		apply_damage_to_crab(damage)
+		state_label.text = "Crab takes %d damage!" % damage
+
+		if crab_hp <= 0:
+			show_victory()
+			return
+	else:
+		var damage: int = DiceRules.calculate_damage(crab_hand, octo_hand)
+		roll_result_label.text = "%s beats %s!\n\n🦀 CRAB WINS THE ROUND" % [crab_hand.display_name, octo_hand.display_name]
+		apply_damage_to_player(damage)
+		state_label.text = "Little Octo takes %d damage!" % damage
+
+		if octo_hp <= 0:
+			show_defeat()
+			return
 
 	await get_tree().create_timer(0.75).timeout
 	if exiting_scene or not is_inside_tree():
 		return
+	_start_next_round()
 
-	await perform_enemy_turn()
 
-
-func perform_enemy_turn() -> void:
-	state = BattleState.ENEMY_TURN
-	state_label.text = "Crab turn"
-	update_ui()
-
-	state = BattleState.ENEMY_ROLLING
-	state_label.text = "Opponent is rolling..."
-	update_ui()
-
-	var results: Array[int] = roll_dice(CRAB_DICE_COUNT)
-	await animate_dice(crab_dice, results)
-	if exiting_scene or not is_inside_tree():
-		return
-
-	var total: int = 0
-	var addends: Array[String] = []
-	for value in results:
-		total += value
-		addends.append(str(value))
-	roll_result_label.text = "Crab rolled %s = %d" % [" + ".join(addends), total]
-
-	var damage: int = calculate_enemy_damage(total)
-	apply_damage_to_player(damage)
-
-	if octo_hp <= 0:
-		show_defeat()
-		return
-
-	await get_tree().create_timer(0.5).timeout
-	if exiting_scene or not is_inside_tree():
-		return
-
+func _start_next_round() -> void:
 	state = BattleState.PLAYER_TURN
 	state_label.text = "Your turn"
 	update_ui()
-
-
-func roll_dice(count: int) -> Array[int]:
-	var results: Array[int] = []
-	for i in count:
-		results.append(randi_range(1, 6))
-	return results
 
 
 func animate_dice(labels: Array[Label], results: Array[int]) -> void:
@@ -206,27 +285,15 @@ func animate_dice(labels: Array[Label], results: Array[int]) -> void:
 		active_labels[i].text = DICE_FACES[results[i] - 1]
 
 
-func calculate_player_damage(total: int) -> int:
-	var raw_damage: int = maxi(1, floori(float(total) / 4.0))
-	var final_damage: int = maxi(1, raw_damage - CRAB_ARMOR)
-	return final_damage
-
-
-func calculate_enemy_damage(total: int) -> int:
-	return maxi(1, floori(float(total) / 5.0))
-
-
 func apply_damage_to_crab(amount: int) -> void:
 	crab_hp = maxi(0, crab_hp - amount)
 	update_ui()
-	state_label.text = "Crab takes %d damage!" % amount
 	_show_floating_damage(crab_damage_label, amount)
 
 
 func apply_damage_to_player(amount: int) -> void:
 	octo_hp = maxi(0, octo_hp - amount)
 	update_ui()
-	state_label.text = "Little Octo takes %d damage!" % amount
 	_show_floating_damage(octo_damage_label, amount)
 
 
