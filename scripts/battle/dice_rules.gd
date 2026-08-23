@@ -6,9 +6,13 @@ extends RefCounted
 ## PvP battle controller) is responsible for animation, HP, and state.
 
 ## Ranking order matters: higher enum value == stronger hand category.
+## NO_POINT is ranked below WASHED_OUT (rather than merely "not scoring") so
+## that if an unresolved NO_POINT hand ever reached compare_hands (it never
+## should, since callers must reroll until scoring), it would always lose
+## rather than incorrectly beating the intentionally weakest scoring hand.
 enum HandType {
-	WASHED_OUT, ## 1-2-3, weakest possible hand.
 	NO_POINT, ## Non-scoring roll. Should never survive to comparison; auto-rerolled.
+	WASHED_OUT, ## 1-2-3, weakest scoring hand.
 	POINT, ## Pair + unmatched die. point_value holds the unmatched die (1-6).
 	TRIPLE, ## Three matching dice. point_value holds the triple's face value (1-6).
 	TIDAL_ROLL, ## 4-5-6, strongest possible hand.
@@ -65,22 +69,12 @@ static func evaluate_hand(dice: Array[int]) -> DiceHand:
 	return DiceHand.new(HandType.NO_POINT, -1, sorted_dice, "NO POINT")
 
 
-## Rolls three dice and keeps rerolling NO_POINT results automatically, up to
-## MAX_REROLLS times. Returns the final scoring DiceHand.
-static func roll_until_scoring(dice_count: int = 3) -> DiceHand:
-	var attempts: int = 0
-	var hand: DiceHand = evaluate_hand(roll_dice(dice_count))
-	while hand.hand_type == HandType.NO_POINT and attempts < MAX_REROLLS:
-		hand = evaluate_hand(roll_dice(dice_count))
-		attempts += 1
-
-	if hand.hand_type == HandType.NO_POINT:
-		# Safety fallback: should almost never trigger. Treat the highest die
-		# rolled as the point so the round can still resolve.
-		var highest: int = hand.dice_values.max()
-		hand = DiceHand.new(HandType.POINT, highest, hand.dice_values, "POINT %d" % highest)
-
-	return hand
+## Builds the safety-fallback hand used when MAX_REROLLS is exhausted without
+## a scoring hand. Treats the highest die rolled as the point so the round
+## can still resolve. Should almost never be needed in practice.
+static func fallback_hand(no_point_hand: DiceHand) -> DiceHand:
+	var highest: int = no_point_hand.dice_values.max()
+	return DiceHand.new(HandType.POINT, highest, no_point_hand.dice_values, "POINT %d" % highest)
 
 
 ## Compares two evaluated hands.

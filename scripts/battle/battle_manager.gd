@@ -179,7 +179,7 @@ func _roll_and_animate(labels: Array[Label], count: int, creature_name: String) 
 		return hand
 
 	while hand.hand_type == DiceRules.HandType.NO_POINT and attempts < DiceRules.MAX_REROLLS:
-		state_label.text = "No point — rolling again..."
+		state_label.text = "%s: No point — rolling again..." % creature_name
 		await get_tree().create_timer(0.25).timeout
 		if exiting_scene or not is_inside_tree():
 			return hand
@@ -192,9 +192,7 @@ func _roll_and_animate(labels: Array[Label], count: int, creature_name: String) 
 		attempts += 1
 
 	if hand.hand_type == DiceRules.HandType.NO_POINT:
-		# Safety fallback: accept the highest die as the point value.
-		var highest: int = hand.dice_values.max()
-		hand = DiceRules.DiceHand.new(DiceRules.HandType.POINT, highest, hand.dice_values, "POINT %d" % highest)
+		hand = DiceRules.fallback_hand(hand)
 
 	return hand
 
@@ -210,6 +208,11 @@ func _format_hand_display(hand: DiceRules.DiceHand) -> String:
 
 
 func _resolve_round(octo_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHand) -> void:
+	# Defensive guard: _roll_and_animate can return early with an unresolved
+	# NO_POINT hand if the scene is exiting mid-round. Never score that case.
+	if octo_hand.hand_type == DiceRules.HandType.NO_POINT or crab_hand.hand_type == DiceRules.HandType.NO_POINT:
+		return
+
 	var result: int = DiceRules.compare_hands(octo_hand, crab_hand)
 
 	if result == 0:
