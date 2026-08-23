@@ -77,13 +77,17 @@ static func evaluate_hand(dice: Array[int]) -> DiceHand:
 
 
 ## Builds the safety-fallback hand used when MAX_REROLLS is exhausted without
-## a scoring hand. Treats the two highest dice as a pseudo-pair (using the
-## higher value as both pair and point) so the round can still resolve using
-## the same pair-first comparison as a real POINT hand. Should almost never
-## be needed in practice.
+## a scoring hand. Treats the highest die as a pseudo-pair value and the
+## second-highest die as the point/tiebreaker, so the round can still resolve
+## using the same pair-first comparison as a real POINT hand, and two
+## fallback hands still tiebreak meaningfully. Should almost never be needed
+## in practice.
 static func fallback_hand(no_point_hand: DiceHand) -> DiceHand:
-	var highest: int = no_point_hand.dice_values.max()
-	return DiceHand.new(HandType.POINT, highest, no_point_hand.dice_values, "PAIR %d • HIGH %d" % [highest, highest], highest)
+	var sorted_dice: Array[int] = no_point_hand.dice_values.duplicate()
+	sorted_dice.sort()
+	var highest: int = sorted_dice[2]
+	var second_highest: int = sorted_dice[1]
+	return DiceHand.new(HandType.POINT, second_highest, no_point_hand.dice_values, "PAIR %d • HIGH %d" % [highest, second_highest], highest)
 
 
 ## Compares two evaluated hands.
