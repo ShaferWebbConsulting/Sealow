@@ -1,0 +1,111 @@
+[gd_scene load_steps=2 format=3 uid="uid://ce4l53xn63f65"]
+
+[ext_resource type="Script" path="res://scripts/battle/battle_manager.gd" id="1_sm8f8"]
+
+[node name="Battle" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sm8f8")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0352941, 0.117647, 0.180392, 1)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 72
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 48
+
+[node name="Content" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="EnemyName" type="Label" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 48
+text = "🦀 CRAB"
+horizontal_alignment = 1
+
+[node name="CrabHpLabel" type="Label" parent="SafeArea/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 28
+text = "HP 10 / 10"
+horizontal_alignment = 1
+
+[node name="VsSpacer" type="Control" parent="SafeArea/Content"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+
+[node name="VsLabel" type="Label" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "VS"
+horizontal_alignment = 1
+
+[node name="OctoSpacer" type="Control" parent="SafeArea/Content"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+
+[node name="OctoName" type="Label" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 42
+text = "🐙 LITTLE OCTO"
+horizontal_alignment = 1
+
+[node name="OctoHpLabel" type="Label" parent="SafeArea/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 28
+text = "HP 12 / 12"
+horizontal_alignment = 1
+
+[node name="StateLabel" type="Label" parent="SafeArea/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "Your turn"
+horizontal_alignment = 1
+
+[node name="ActionSpacer" type="Control" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RollButton" type="Button" parent="SafeArea/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 40
+text = "ROLL"
+
+[node name="ReturnHomeButton" type="Button" parent="SafeArea/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "RETURN HOME"

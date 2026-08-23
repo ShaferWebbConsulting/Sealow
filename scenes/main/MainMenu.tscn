@@ -1,0 +1,89 @@
+[gd_scene load_steps=2 format=3 uid="uid://mpvfwub5de0d"]
+
+[ext_resource type="Script" path="res://scripts/main/main_menu.gd" id="1_l4gfr"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_l4gfr")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0431373, 0.156863, 0.247059, 1)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 72
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 48
+
+[node name="Content" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="Title" type="Label" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 52
+text = "🌊 SEA LOW 🌊"
+horizontal_alignment = 1
+
+[node name="SpacerTop" type="Control" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Octo" type="Label" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 96
+text = "🐙"
+horizontal_alignment = 1
+
+[node name="Name" type="Label" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 34
+text = "LITTLE OCTO\nLv. 1"
+horizontal_alignment = 1
+
+[node name="Shells" type="Label" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 30
+text = "🐚 Shells: 0"
+horizontal_alignment = 1
+
+[node name="SpacerBottom" type="Control" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DiveButton" type="Button" parent="SafeArea/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 112)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 42
+text = "DIVE"
+
+[node name="SettingsButton" type="Button" parent="SafeArea/Content"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "⚙ Settings"
