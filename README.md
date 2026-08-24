@@ -65,8 +65,8 @@ on your OS.
     opens a small popup for using one of three consumable items:
     - 🐢 **Turtle Shield** — if the player would lose the battle while the
       shield is armed, the result becomes a **DRAW** instead of a defeat.
-    - 🔱 **Trident** — adds +2 damage to the player's next successful hit.
-    - 🧜 **Mermaid Scale** — restores 2 HP immediately (capped at max HP).
+	- 🔱 **Trident** — adds +2 damage to the player's next successful hit.
+	- 🧜 **Mermaid Scale** — restores 2 HP immediately (capped at max HP).
 - **Persistence**: character type/color, shells, level, battles won, and
   item inventory counts are saved after character creation, battle wins,
   and item use, and are restored (with safe defaults for missing/old
@@ -79,33 +79,33 @@ screenshots.
 
 ```
 scenes/
-    main/MainMenu.tscn            Main Menu (shows selected character)
-    character_select/
-        CharacterSelect.tscn      First-run creature + color picker
-    battle/Battle.tscn            Battle screen (Crab vs. player creature)
-    ui/
-        Dice.tscn                 Reusable ocean-themed die
-        ItemPopup.tscn            Reusable item-use popup/bottom sheet
+	main/MainMenu.tscn            Main Menu (shows selected character)
+	character_select/
+		CharacterSelect.tscn      First-run creature + color picker
+	battle/Battle.tscn            Battle screen (Crab vs. player creature)
+	ui/
+		Dice.tscn                 Reusable ocean-themed die
+		ItemPopup.tscn            Reusable item-use popup/bottom sheet
 
 scripts/
-    systems/
-        save_manager.gd           Autoload; persists PlayerData to user://
-        scene_manager.gd          Autoload; scene transition helpers
-    player/
-        player_data.gd            Save schema, creature + pastel color data
-    items/
-        item_data.gd              Item catalog (Turtle Shield/Trident/Mermaid Scale)
-        item_effects.gd           Isolated item gameplay effects
-    battle/
-        battle_manager.gd         Battle state machine, dice rolls, log, items
-        dice_rules.gd             Hand evaluation/comparison rules
-    ui/
-        dice.gd, dice_pips.gd     Dice component logic + pip rendering
-        item_popup.gd             Item popup logic
-    character_select/
-        character_select.gd       Character Select screen logic
-    main/
-        main_menu.gd              Main Menu logic
+	systems/
+		save_manager.gd           Autoload; persists PlayerData to user://
+		scene_manager.gd          Autoload; scene transition helpers
+	player/
+		player_data.gd            Save schema, creature + pastel color data
+	items/
+		item_data.gd              Item catalog (Turtle Shield/Trident/Mermaid Scale)
+		item_effects.gd           Isolated item gameplay effects
+	battle/
+		battle_manager.gd         Battle state machine, dice rolls, log, items
+		dice_rules.gd             Hand evaluation/comparison rules
+	ui/
+		dice.gd, dice_pips.gd     Dice component logic + pip rendering
+		item_popup.gd             Item popup logic
+	character_select/
+		character_select.gd       Character Select screen logic
+	main/
+		main_menu.gd              Main Menu logic
 ```
 
 ## Manual steps after pulling this update

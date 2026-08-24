@@ -11,7 +11,7 @@ func _ready() -> void:
 
 	# Simulate picking a character + color, then persisting via SaveManager
 	# the same way character_select.gd does.
-	SaveManager.select_character("octopus", "#B3E5FC")
+	SaveManager.select_character("octopus", "#B3E5FC", "Test Diver")
 	SaveManager.save_game()
 	print("[flow] after character select, has_save: ", SaveManager.has_save())
 	assert(SaveManager.has_save())

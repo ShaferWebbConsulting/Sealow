@@ -63,13 +63,26 @@ func get_character_type() -> String:
 func get_character_color() -> String:
 	return String(data.get("character_color", "seafoam"))
 
+func get_player_name() -> String:
+	return String(data.get("player_name", "Little Diver"))
 
 ## Persists the player's chosen creature + color and marks character select
 ## as completed so it is never shown again on future launches.
-func select_character(character_type: String, character_color: String) -> void:
+func select_character(
+	character_type: String,
+	character_color: String,
+	player_name: String = "Diver"
+) -> void:
+	var cleaned_name: String = player_name.strip_edges()
+
+	if cleaned_name.is_empty():
+		cleaned_name = "Diver"
+
 	data["character_selected"] = true
 	data["character_type"] = character_type
 	data["character_color"] = character_color
+	data["player_name"] = cleaned_name
+
 	save_game()
 
 
@@ -177,3 +190,13 @@ func load_game() -> void:
 		parsed_dict["shells"] = parsed_dict["player_shells"]
 
 	data = PlayerDataScript.merge_with_defaults(parsed_dict, defaults)
+
+
+func set_player_name(player_name: String) -> void:
+	var cleaned_name: String = player_name.strip_edges()
+
+	if cleaned_name.is_empty():
+		cleaned_name = "Diver"
+
+	data["player_name"] = cleaned_name
+	save_game()

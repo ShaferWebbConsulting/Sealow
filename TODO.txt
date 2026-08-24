@@ -1,0 +1,25 @@
+| Order | Feature                                                | Difficulty         | Why                                                                          |
+| ----- | ------------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------- |
+| **1** | Change player name                                     | 🟢 Very easy       | Mostly one saved string + UI                                                 |
+| **2** | Circle of Seaweed retry item                           | 🟢 Easy            | Your item/inventory system already exists                                    |
+| **3** | Leveling system using shells                           | 🟢🟡 Easy–Medium   | Save level, define thresholds, add level-up UI                               |
+| **4** | Small / Medium / Large opponents + colors              | 🟡 Medium          | Reuse existing sprites with scaling/tinting + HP tables                      |
+| **5** | SeaLow sprite                                          | 🟡 Medium          | Mostly art + plugging it into existing creature system                       |
+| **6** | Multi-level “Dive Deeper” campaign                     | 🟠 Medium–Hard     | Requires run state, opponent progression, reset rules, difficulty curve      |
+| **7** | Crown animals + Mermaid King + Poseidon + Cthulhu etc. | 🔴 Hardest overall | Lots of unique art, bosses, animations, balancing, probably unique abilities |
+
+
+
+
+So your immediate checklist is:
+Add player_name to PlayerData
+Add get_player_name() / set_player_name() to SaveManager
+Replace Main Menu %Name Label with a Button
+Add NameEditPanel
+Add %NameInput
+Add %CancelNameButton
+Add %SaveNameButton
+Make all four required nodes unique
+Use the updated main_menu.gd
+Run and rename Diver
+Restart SeaLow and verify the name persisted

@@ -9,7 +9,7 @@ const DEFAULT_SAVE: Dictionary = {
 	"character_selected": false,
 	"character_type": "octopus",
 	"character_color": "seafoam",
-	"shells": 0,
+	"shells": 10,
 	"level": 1,
 	"battles_won": 0,
 	"inventory": {

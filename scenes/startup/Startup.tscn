@@ -1,20 +1,20 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://br4tpu5bapdix"]
 
-[ext_resource type="Script" path="res://scripts/startup/startup.gd" id="1_startup"]
+[ext_resource type="Script" uid="uid://blj0n2ucoyce" path="res://scripts/startup/startup.gd" id="1_startup"]
 [ext_resource type="Theme" uid="uid://b6q1s0p8m2w3x" path="res://assets/theme/sealow_theme.tres" id="2_theme"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+content_margin_left = 24.0
+content_margin_top = 20.0
+content_margin_right = 24.0
+content_margin_bottom = 20.0
 bg_color = Color(0.0784314, 0.156863, 0.207843, 0.92)
 corner_radius_top_left = 22
 corner_radius_top_right = 22
 corner_radius_bottom_right = 22
 corner_radius_bottom_left = 22
-content_margin_left = 24.0
-content_margin_top = 20.0
-content_margin_right = 24.0
-content_margin_bottom = 20.0
 
-[node name="Startup" type="Control"]
+[node name="Startup" type="Control" unique_id=450610239]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -24,7 +24,7 @@ grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_startup")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=1518427086]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -33,9 +33,9 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0431373, 0.156863, 0.247059, 1)
 
-[node name="BackgroundDeep" type="ColorRect" parent="."]
+[node name="BackgroundDeep" type="ColorRect" parent="." unique_id=248600510]
 layout_mode = 1
-anchors_preset = 12
+anchors_preset = -1
 anchor_top = 0.55
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -43,7 +43,7 @@ grow_horizontal = 2
 grow_vertical = 0
 color = Color(0.0235294, 0.0862745, 0.145098, 1)
 
-[node name="SafeArea" type="MarginContainer" parent="."]
+[node name="SafeArea" type="MarginContainer" parent="." unique_id=1893977074]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -55,41 +55,41 @@ theme_override_constants/margin_top = 96
 theme_override_constants/margin_right = 40
 theme_override_constants/margin_bottom = 64
 
-[node name="Content" type="VBoxContainer" parent="SafeArea"]
+[node name="Content" type="VBoxContainer" parent="SafeArea" unique_id=222101059]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 24
 
-[node name="Title" type="Label" parent="SafeArea/Content"]
+[node name="Title" type="Label" parent="SafeArea/Content" unique_id=994956735]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 56
 text = "🌊 SEA LOW 🌊"
 horizontal_alignment = 1
 
-[node name="Spacer" type="Control" parent="SafeArea/Content"]
+[node name="Spacer" type="Control" parent="SafeArea/Content" unique_id=696166480]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ContinueButton" type="Button" parent="SafeArea/Content"]
+[node name="ContinueButton" type="Button" parent="SafeArea/Content" unique_id=1629436972]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 theme_override_font_sizes/font_size = 34
 text = "CONTINUE"
 
-[node name="NewDiveButton" type="Button" parent="SafeArea/Content"]
+[node name="NewDiveButton" type="Button" parent="SafeArea/Content" unique_id=1470229609]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 theme_override_font_sizes/font_size = 34
 text = "NEW DIVE"
 
-[node name="SpacerBottom" type="Control" parent="SafeArea/Content"]
+[node name="SpacerBottom" type="Control" parent="SafeArea/Content" unique_id=669773023]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ConfirmPanel" type="Control" parent="."]
+[node name="ConfirmPanel" type="Control" parent="." unique_id=305955013]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -99,7 +99,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Dim" type="ColorRect" parent="ConfirmPanel"]
+[node name="Dim" type="ColorRect" parent="ConfirmPanel" unique_id=77041524]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -108,7 +108,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0117647, 0.0470588, 0.0784314, 0.9)
 
-[node name="Center" type="CenterContainer" parent="ConfirmPanel"]
+[node name="Center" type="CenterContainer" parent="ConfirmPanel" unique_id=1253189599]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -116,15 +116,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Panel" type="PanelContainer" parent="ConfirmPanel/Center"]
+[node name="Panel" type="PanelContainer" parent="ConfirmPanel/Center" unique_id=506844207]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="VBox" type="VBoxContainer" parent="ConfirmPanel/Center/Panel"]
+[node name="VBox" type="VBoxContainer" parent="ConfirmPanel/Center/Panel" unique_id=1285542129]
 layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="Title" type="Label" parent="ConfirmPanel/Center/Panel/VBox"]
+[node name="Title" type="Label" parent="ConfirmPanel/Center/Panel/VBox" unique_id=443224648]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 28
@@ -132,11 +132,11 @@ text = "START A NEW DIVE?"
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="Body" type="Label" parent="ConfirmPanel/Center/Panel/VBox"]
+[node name="Body" type="Label" parent="ConfirmPanel/Center/Panel/VBox" unique_id=2046097608]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
+theme_override_font_sizes/font_size = 20
 text = "This will erase your current:
 
 Character
@@ -146,7 +146,7 @@ Progress"
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="ConfirmCancelButton" type="Button" parent="ConfirmPanel/Center/Panel/VBox"]
+[node name="ConfirmCancelButton" type="Button" parent="ConfirmPanel/Center/Panel/VBox" unique_id=545533683]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
@@ -154,7 +154,7 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "CANCEL"
 
-[node name="ConfirmStartNewButton" type="Button" parent="ConfirmPanel/Center/Panel/VBox"]
+[node name="ConfirmStartNewButton" type="Button" parent="ConfirmPanel/Center/Panel/VBox" unique_id=1180063667]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2

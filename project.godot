@@ -24,10 +24,6 @@ config/icon="res://assets/ui/icon.svg"
 SceneManager="*res://scripts/systems/scene_manager.gd"
 SaveManager="*res://scripts/systems/save_manager.gd"
 
-[gui]
-
-theme/custom="res://assets/theme/sealow_theme.tres"
-
 [display]
 
 window/size/viewport_width=720
@@ -35,6 +31,10 @@ window/size/viewport_height=1280
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
+
+[gui]
+
+theme/custom="res://assets/theme/sealow_theme.tres"
 
 [rendering]
 

@@ -11,9 +11,17 @@ extends Control
 @onready var confirm_panel: Control = %ConfirmPanel
 @onready var confirm_cancel_button: Button = %ConfirmCancelButton
 @onready var confirm_start_new_button: Button = %ConfirmStartNewButton
+@onready var name_edit_panel: Control = %NameEditPanel  
+@onready var name_input: Control = %NameEditPanel  
+@onready var save_name_button: Control = %NameEditPanel  
+@onready var cancel_name_button: Control = %NameEditPanel  
 
 
 func _ready() -> void:
+	print("NameEditPanel: ", name_edit_panel)
+	print("NameInput: ", name_input)
+	print("SaveNameButton: ", save_name_button)
+	print("CancelNameButton: ", cancel_name_button)
 	continue_button.pressed.connect(_on_continue_pressed)
 	new_dive_button.pressed.connect(_on_new_dive_pressed)
 	confirm_cancel_button.pressed.connect(_on_confirm_cancel_pressed)
