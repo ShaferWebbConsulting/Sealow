@@ -1,0 +1,107 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/shop/shop.gd" id="1_shop"]
+[ext_resource type="Theme" uid="uid://b6q1s0p8m2w3x" path="res://assets/theme/sealow_theme.tres" id="2_theme"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_shells"]
+bg_color = Color(0.0784314, 0.156863, 0.207843, 0.85)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
+
+[node name="Shop" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_shop")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0431373, 0.156863, 0.247059, 1)
+
+[node name="BackgroundDeep" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 0.55
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.0235294, 0.0862745, 0.145098, 1)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 64
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 40
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="SafeArea/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 36
+text = "🛒 SHOP"
+horizontal_alignment = 1
+
+[node name="ShellsPanel" type="PanelContainer" parent="SafeArea/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_shells")
+
+[node name="ShellsLabel" type="Label" parent="SafeArea/VBox/ShellsPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 26
+text = "🐚 0 Shells"
+horizontal_alignment = 1
+
+[node name="MessageLabel" type="Label" parent="SafeArea/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.941176, 0.760784, 0.239216, 1)
+text = "Not enough shells"
+horizontal_alignment = 1
+visible = false
+
+[node name="Scroll" type="ScrollContainer" parent="SafeArea/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ListVBox" type="VBoxContainer" parent="SafeArea/VBox/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="BackButton" type="Button" parent="SafeArea/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "← BACK"

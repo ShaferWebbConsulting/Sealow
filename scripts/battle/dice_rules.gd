@@ -20,6 +20,14 @@ enum HandType {
 
 const MAX_REROLLS: int = 20
 
+## v0.3 damage rules: damage is determined solely by the TYPE of winning
+## hand (not a total/divisor calculation). Centralized here so no magic
+## damage numbers are scattered through battle_manager.gd.
+const AUTO_WIN_DAMAGE: int = 3 ## Tidal Roll, or winning because the opponent Washed Out.
+const TRIPLES_DAMAGE: int = 2
+const POINT_WIN_DAMAGE: int = 1 ## Pair + point ("double") win.
+const TIE_DAMAGE: int = 0
+
 ## Result of evaluating a single three-dice roll.
 class DiceHand:
 	var hand_type: int
@@ -108,19 +116,30 @@ static func compare_hands(player_hand: DiceHand, enemy_hand: DiceHand) -> int:
 	return 0
 
 
-## Determines damage dealt by the winning hand. `loser_hand` is used only to
-## check for the Washed Out bonus.
-static func calculate_damage(winner_hand: DiceHand, loser_hand: DiceHand) -> int:
-	var damage: int = 0
-	match winner_hand.hand_type:
-		HandType.TIDAL_ROLL:
-			damage = 4
-		HandType.TRIPLE:
-			damage = 3
-		_:
-			damage = 2
+## Determines damage dealt by the winning hand, based purely on the TYPE of
+## win rather than a total/divisor calculation:
+##   Tidal Roll, or an automatic win because the loser Washed Out -> AUTO_WIN_DAMAGE
+##   Triple                                                       -> TRIPLES_DAMAGE
+##   Pair/point ("double") win                                     -> POINT_WIN_DAMAGE
+## `loser_hand` is only consulted to detect the Washed Out automatic-loss case.
+static func damage_for_result(winner_hand: DiceHand, loser_hand: DiceHand) -> int:
+	if winner_hand.hand_type == HandType.TIDAL_ROLL or loser_hand.hand_type == HandType.WASHED_OUT:
+		return AUTO_WIN_DAMAGE
+	if winner_hand.hand_type == HandType.TRIPLE:
+		return TRIPLES_DAMAGE
+	return POINT_WIN_DAMAGE
 
+
+## Short, banner-friendly label describing the winning result (e.g. "TIDAL",
+## "TRIPLES", "POINT 6"), used by the battle UI's turn/result banner so a
+## player can understand what just happened without reading the round log.
+static func result_label(winner_hand: DiceHand, loser_hand: DiceHand) -> String:
+	if winner_hand.hand_type == HandType.TIDAL_ROLL:
+		return "TIDAL"
 	if loser_hand.hand_type == HandType.WASHED_OUT:
-		damage += 1
-
-	return damage
+		return "WASHED OUT"
+	if winner_hand.hand_type == HandType.TRIPLE:
+		return "TRIPLES"
+	if winner_hand.hand_type == HandType.POINT:
+		return "POINT %d" % winner_hand.pair_value
+	return winner_hand.display_name

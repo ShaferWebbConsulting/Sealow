@@ -35,6 +35,23 @@ func add_shells(amount: int) -> void:
 	save_game()
 
 
+## Whether a save file exists on disk at all (used by the startup screen to
+## decide whether CONTINUE should be offered). This is deliberately based on
+## the file's existence rather than `character_selected`, so a save that
+## exists but hasn't finished character select yet is still treated as "has
+## a save" (CONTINUE will simply route back into character select).
+func has_save() -> bool:
+	return FileAccess.file_exists(SAVE_PATH)
+
+
+## Wipes all player progress (character, shells, level, wins, inventory) back
+## to defaults and persists it immediately. Used by the "NEW DIVE" flow on
+## the startup screen only after the player has explicitly confirmed.
+func reset_save() -> void:
+	data = PlayerDataScript.DEFAULT_SAVE.duplicate(true)
+	save_game()
+
+
 func is_character_selected() -> bool:
 	return bool(data.get("character_selected", false))
 
@@ -102,6 +119,20 @@ func add_item(key: String, amount: int = 1) -> void:
 	inventory[key] = int(inventory.get(key, 0)) + amount
 	data["inventory"] = inventory
 	save_game()
+
+
+## Shop purchase: spends `cost` shells and grants one of item `key` if the
+## player can afford it, persisting immediately. Returns true on success,
+## false (with no state changed) if the player doesn't have enough shells.
+func buy_item(key: String, cost: int) -> bool:
+	if int(data.get("shells", 0)) < cost:
+		return false
+	data["shells"] = int(data.get("shells", 0)) - cost
+	var inventory: Dictionary = data.get("inventory", {})
+	inventory[key] = int(inventory.get(key, 0)) + 1
+	data["inventory"] = inventory
+	save_game()
+	return true
 
 
 ## Writes the current save data to disk as JSON.
