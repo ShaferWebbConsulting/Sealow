@@ -248,7 +248,7 @@ func _on_item_pressed() -> void:
 	if shield_armed:
 		disabled_reasons["turtle_shield"] = "ALREADY ARMED"
 
-	item_popup.open(SaveManager.data.get("inventory", {}), disabled_reasons)
+	item_popup.open(SaveManager.get_inventory(), disabled_reasons)
 
 
 func _on_item_used(item_key: String) -> void:
@@ -372,14 +372,26 @@ func _roll_and_animate(row: HBoxContainer, dice_nodes: Array[Dice], count: int) 
 	return hand
 
 
-## Plays each die's roll animation in parallel (fire-and-forget, then awaits
-## every die's `roll_finished` signal) so a row of 3 dice settles together
-## rather than one at a time.
+## Plays each die's roll animation in parallel (fire-and-forget), then waits
+## for every die to report completion via a shared counter. Awaiting each
+## die's `roll_finished` signal in sequence would be unsafe here (a later
+## die can finish before an earlier one, and a missed signal never repeats),
+## so completions are tallied instead of awaited one-by-one. The counter is
+## boxed in a single-element Array because GDScript lambdas capture plain
+## local variables by value, not by reference — an Array/Dictionary is
+## captured by reference, so mutating its contents from the lambda is
+## visible to this function.
 func _animate_dice_row(dice_nodes: Array[Dice], results: Array[int], duration: float = DICE_ROLL_DURATION) -> void:
+	var remaining: Array[int] = [dice_nodes.size()]
+	var on_die_done := func(_final_value: int) -> void:
+		remaining[0] -= 1
 	for i in dice_nodes.size():
+		dice_nodes[i].roll_finished.connect(on_die_done, CONNECT_ONE_SHOT)
 		dice_nodes[i].play_roll_animation(results[i], duration)
-	for die in dice_nodes:
-		await die.roll_finished
+	while remaining[0] > 0:
+		await get_tree().process_frame
+		if exiting_scene or not is_inside_tree():
+			return
 
 
 func _resolve_round(player_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHand) -> void:

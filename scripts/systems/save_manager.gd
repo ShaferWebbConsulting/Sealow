@@ -75,6 +75,14 @@ func get_item_count(key: String) -> int:
 	return int(inventory.get(key, 0))
 
 
+## Returns a duplicate of the current item inventory dictionary
+## (e.g. `{"turtle_shield": 1, "trident": 1, "mermaid_scale": 1}`) so
+## callers can read quantities without depending on the internal shape of
+## `data`.
+func get_inventory() -> Dictionary:
+	return (data.get("inventory", {}) as Dictionary).duplicate()
+
+
 ## Consumes one of item `key` if available, persisting immediately. Returns
 ## true if an item was actually consumed.
 func consume_item(key: String) -> bool:
