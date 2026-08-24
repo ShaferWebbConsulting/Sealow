@@ -508,6 +508,16 @@ func _resolve_round(player_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHa
 ## returns to its stored home position. Damage/HP changes are applied by the
 ## caller right at the moment of impact (immediately after this returns).
 func _play_attack_animation(attacker: Label, defender: Label, attacker_home: Vector2, defender_home: Vector2) -> void:
+	# Guard against being called before the first layout pass has captured
+	# real "home" positions (e.g. _player_sprite_home/_enemy_sprite_home
+	# still Vector2.ZERO) — fall back to each node's current position so the
+	# lunge/shake still has a sensible rest point instead of silently
+	# collapsing to a zero-length vector.
+	if attacker_home == Vector2.ZERO:
+		attacker_home = attacker.position
+	if defender_home == Vector2.ZERO:
+		defender_home = defender.position
+
 	var toward: Vector2 = (defender_home - attacker_home)
 	var lunge_offset: Vector2 = toward.normalized() * minf(toward.length() * 0.35, 60.0) if toward.length() > 0.0 else Vector2.ZERO
 
@@ -573,7 +583,7 @@ func _render_log_entry(entry: Dictionary) -> void:
 	else:
 		var player_emoji: String = PlayerDataScript.get_emoji(player_character_type)
 		var winner_emoji: String = player_emoji if entry["player_won"] else "🦀"
-		var loser_name: String = "Crab" if entry["player_won"] else "Octo"
+		var loser_name: String = "Crab" if entry["player_won"] else PlayerDataScript.get_display_name(player_character_type)
 		var trident_suffix: String = " 🔱" if entry["trident_used"] else ""
 		label.text = "R%d  %s %s%s   %s -%d HP" % [
 			entry["round"], winner_emoji, entry["result_type_label"], trident_suffix, loser_name, entry["damage"],

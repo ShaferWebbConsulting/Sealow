@@ -22,7 +22,6 @@ func _ready() -> void:
 
 	var has_save: bool = SaveManager.has_save()
 	continue_button.visible = has_save
-	continue_button.disabled = not has_save
 	# NEW DIVE is the emphasized/primary action when there's no save yet.
 	new_dive_button.text = "NEW DIVE" if has_save else "🌊 NEW DIVE"
 
