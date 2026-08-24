@@ -10,6 +10,9 @@ enum ItemId {
 	MERMAID_SCALE,
 }
 
+## MVP shop pricing: every item costs exactly 1 shell.
+const SHOP_COST_SHELLS: int = 1
+
 @export var id: int = ItemId.TURTLE_SHIELD
 @export var display_name: String = ""
 @export var icon: String = ""
