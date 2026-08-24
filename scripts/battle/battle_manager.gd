@@ -1,25 +1,21 @@
 extends Control
 
 const DiceRules = preload("res://scripts/battle/dice_rules.gd")
+const PlayerDataScript = preload("res://scripts/player/player_data.gd")
+const ItemDataScript = preload("res://scripts/items/item_data.gd")
+const ItemEffectsScript = preload("res://scripts/items/item_effects.gd")
 
-const OCTO_MAX_HP: int = 12
+const PLAYER_MAX_HP: int = 12
 const CRAB_MAX_HP: int = 10
-const OCTO_DICE_COUNT: int = 3
+const PLAYER_DICE_COUNT: int = 3
 const CRAB_DICE_COUNT: int = 3
 const VICTORY_SHELLS: int = 10
 const HP_TWEEN_DURATION: float = 0.3
+const DICE_ROLL_DURATION: float = 1.4
+const MAX_LOG_ENTRIES_SHOWN: int = 5
 
-const DICE_FACES: Array[String] = [
-	"⚀",
-	"⚁",
-	"⚂",
-	"⚃",
-	"⚄",
-	"⚅",
-]
-
-## Only BattleState.PLAYER_TURN allows the Roll button to be pressed. Every
-## other state means a turn is currently animating/resolving.
+## Only BattleState.PLAYER_TURN allows the Roll/Item buttons to be pressed.
+## Every other state means a turn is currently animating/resolving.
 enum BattleState {
 	PLAYER_TURN,
 	PLAYER_ROLLING,
@@ -27,12 +23,24 @@ enum BattleState {
 	RESOLVING_ROUND,
 	VICTORY,
 	DEFEAT,
+	DRAW,
 }
 
 var state: BattleState = BattleState.PLAYER_TURN
-var octo_hp: int = OCTO_MAX_HP
+var player_hp: int = PLAYER_MAX_HP
 var crab_hp: int = CRAB_MAX_HP
 var exiting_scene: bool = false
+var round_number: int = 0
+
+## Structured round-by-round history, kept even after old entries scroll out
+## of view, so it can later be reused for a match summary screen.
+var battle_log: Array[Dictionary] = []
+
+## Item battle-state flags. Kept isolated here and only ever mutated via
+## ItemEffects helpers so the "if would lose, become a draw" / "+2 damage
+## next hit" rules aren't scattered through the round-resolution logic.
+var trident_armed: bool = false
+var shield_armed: bool = false
 
 ## Guards against awarding shells more than once for the same victory, even
 ## if the victory panel's button is pressed repeatedly.
@@ -43,26 +51,32 @@ var victory_reward_given: bool = false
 ## tweens (which would cause the fill to jitter/snap).
 var _hp_bar_tweens: Dictionary = {}
 
-@onready var message_label: Label = %MessageLabel
+var player_character_type: String = "octopus"
+
+@onready var status_label: Label = %StatusLabel
 @onready var octo_hp_label: Label = %OctoHpLabel
 @onready var crab_hp_label: Label = %CrabHpLabel
 @onready var octo_hp_bar: ProgressBar = %OctoHpBar
 @onready var crab_hp_bar: ProgressBar = %CrabHpBar
 @onready var roll_button: Button = %RollButton
-@onready var bet_button: Button = %BetButton
+@onready var item_button: Button = %ItemButton
 @onready var run_button: Button = %RunButton
 @onready var rules_button: Button = %RulesButton
 
-@onready var octo_dice_row: HBoxContainer = %OctoDiceRow
-@onready var crab_dice_row: HBoxContainer = %CrabDiceRow
-@onready var octo_dice: Array[Label] = [%OctoDie1, %OctoDie2, %OctoDie3]
-@onready var crab_dice: Array[Label] = [%CrabDie1, %CrabDie2, %CrabDie3]
+@onready var player_dice_row: HBoxContainer = %PlayerDiceRow
+@onready var crab_dice_row: HBoxContainer = %EnemyDiceRow
+@onready var player_dice: Array[Dice] = [%PlayerDie1, %PlayerDie2, %PlayerDie3]
+@onready var crab_dice: Array[Dice] = [%EnemyDie1, %EnemyDie2, %EnemyDie3]
 
-@onready var octo_hand_label: Label = %OctoHandLabel
-@onready var crab_hand_label: Label = %CrabHandLabel
+@onready var log_scroll: ScrollContainer = %LogScroll
+@onready var log_list: VBoxContainer = %LogList
 
 @onready var crab_damage_label: Label = %CrabDamageLabel
 @onready var octo_damage_label: Label = %OctoDamageLabel
+
+@onready var player_name_label: Label = %OctoName
+@onready var player_sprite_label: Label = %PlayerSprite
+@onready var player_body_tint: Panel = %PlayerBodyTint
 
 @onready var victory_panel: Control = %VictoryPanel
 @onready var shells_earned_label: Label = %ShellsEarnedLabel
@@ -72,6 +86,9 @@ var _hp_bar_tweens: Dictionary = {}
 @onready var defeat_retry_button: Button = %DefeatRetryButton
 @onready var defeat_return_button: Button = %DefeatReturnButton
 
+@onready var draw_panel: Control = %DrawPanel
+@onready var draw_return_button: Button = %DrawReturnButton
+
 @onready var run_confirm_panel: Control = %RunConfirmPanel
 @onready var stay_button: Button = %StayButton
 @onready var confirm_run_button: Button = %ConfirmRunButton
@@ -79,17 +96,24 @@ var _hp_bar_tweens: Dictionary = {}
 @onready var rules_panel: Control = %RulesPanel
 @onready var rules_close_button: Button = %RulesCloseButton
 
+@onready var item_popup: ItemPopup = %ItemPopup
+
 
 func _ready() -> void:
 	roll_button.pressed.connect(_on_roll_pressed)
+	item_button.pressed.connect(_on_item_pressed)
 	run_button.pressed.connect(_on_run_pressed)
 	stay_button.pressed.connect(_on_stay_pressed)
 	confirm_run_button.pressed.connect(_on_confirm_run_pressed)
 	victory_return_button.pressed.connect(_on_return_home_pressed)
 	defeat_return_button.pressed.connect(_on_return_home_pressed)
 	defeat_retry_button.pressed.connect(_on_try_again_pressed)
+	draw_return_button.pressed.connect(_on_return_home_pressed)
 	rules_button.pressed.connect(_on_rules_pressed)
 	rules_close_button.pressed.connect(_on_rules_close_pressed)
+	item_popup.item_used.connect(_on_item_used)
+
+	_setup_player_character()
 	start_battle()
 
 
@@ -97,54 +121,76 @@ func _exit_tree() -> void:
 	exiting_scene = true
 
 
+## Applies the player's saved creature choice to the name/sprite/HP-bar
+## labels and tints the body-preview panel with their chosen color. The
+## emoji glyph itself is never tinted (see PlayerData.CHARACTER_COLORS doc).
+func _setup_player_character() -> void:
+	player_character_type = SaveManager.get_character_type()
+	player_sprite_label.text = PlayerDataScript.get_emoji(player_character_type)
+	player_name_label.text = "%s %s" % [
+		PlayerDataScript.get_emoji(player_character_type),
+		PlayerDataScript.get_display_name(player_character_type).to_upper(),
+	]
+
+	var tint_style: StyleBoxFlat = StyleBoxFlat.new()
+	tint_style.bg_color = PlayerDataScript.get_color(SaveManager.get_character_color())
+	tint_style.bg_color.a = 0.22
+	tint_style.set_corner_radius_all(400)
+	player_body_tint.add_theme_stylebox_override("panel", tint_style)
+
+
 func start_battle() -> void:
 	state = BattleState.PLAYER_TURN
-	octo_hp = OCTO_MAX_HP
+	player_hp = PLAYER_MAX_HP
 	crab_hp = CRAB_MAX_HP
 	victory_reward_given = false
+	round_number = 0
+	battle_log.clear()
+	trident_armed = false
+	shield_armed = false
 
 	victory_panel.visible = false
 	defeat_panel.visible = false
+	draw_panel.visible = false
 	rules_panel.visible = false
 	run_confirm_panel.visible = false
 	crab_damage_label.visible = false
 	octo_damage_label.visible = false
-	octo_dice_row.visible = false
+	player_dice_row.visible = false
 	crab_dice_row.visible = false
-	octo_hand_label.visible = false
-	crab_hand_label.visible = false
-	octo_hand_label.text = ""
-	crab_hand_label.text = ""
 
-	_reset_dice(crab_dice)
-	_reset_dice(octo_dice)
+	for die in player_dice:
+		die.set_value(1)
+	for die in crab_dice:
+		die.set_value(1)
 
-	octo_hp_bar.max_value = OCTO_MAX_HP
+	for child in log_list.get_children():
+		child.queue_free()
+
+	octo_hp_bar.max_value = PLAYER_MAX_HP
 	crab_hp_bar.max_value = CRAB_MAX_HP
-	octo_hp_bar.value = OCTO_MAX_HP
+	octo_hp_bar.value = PLAYER_MAX_HP
 	crab_hp_bar.value = CRAB_MAX_HP
 
-	message_label.text = "What will Octo do?"
+	status_label.text = "Tap ROLL to begin"
 	update_ui()
 
 
-func _reset_dice(dice: Array[Label]) -> void:
-	for die in dice:
-		die.text = DICE_FACES[0]
-
-
 func update_ui() -> void:
-	octo_hp_label.text = "HP %d / %d" % [octo_hp, OCTO_MAX_HP]
+	octo_hp_label.text = "HP %d / %d" % [player_hp, PLAYER_MAX_HP]
 	crab_hp_label.text = "HP %d / %d" % [crab_hp, CRAB_MAX_HP]
-	roll_button.disabled = state != BattleState.PLAYER_TURN
-	roll_button.visible = state != BattleState.VICTORY and state != BattleState.DEFEAT
-	run_button.disabled = state != BattleState.PLAYER_TURN
+	var in_player_turn: bool = state == BattleState.PLAYER_TURN
+	roll_button.disabled = not in_player_turn
+	roll_button.visible = state != BattleState.VICTORY and state != BattleState.DEFEAT and state != BattleState.DRAW
+	run_button.disabled = not in_player_turn
+	item_button.disabled = not in_player_turn
 
 
 ## Animates a health bar's ProgressBar value toward `new_value` rather than
-## snapping instantly, so HP loss reads as a clear, gentle visual change.
+## snapping instantly, so HP loss/gain reads as a clear, gentle visual change.
 ## Kills any tween already animating this bar first so rapid successive
-## damage events can never leave overlapping tweens fighting over the value.
+## damage/heal events can never leave overlapping tweens fighting over the
+## value.
 func _animate_hp_bar(bar: ProgressBar, new_value: int) -> void:
 	var existing_tween: Tween = _hp_bar_tweens.get(bar)
 	if existing_tween != null and existing_tween.is_valid():
@@ -186,74 +232,136 @@ func _on_confirm_run_pressed() -> void:
 	SceneManager.go_to_main_menu()
 
 
-## Runs one full SeaLow round: Octo rolls, Crab rolls, hands are compared,
+## ------------------------------------------------------------------
+## Items
+## ------------------------------------------------------------------
+
+func _on_item_pressed() -> void:
+	if state != BattleState.PLAYER_TURN:
+		return
+
+	var disabled_reasons: Dictionary = {}
+	if player_hp >= PLAYER_MAX_HP:
+		disabled_reasons["mermaid_scale"] = "HP FULL"
+	if trident_armed:
+		disabled_reasons["trident"] = "ALREADY ARMED"
+	if shield_armed:
+		disabled_reasons["turtle_shield"] = "ALREADY ARMED"
+
+	item_popup.open(SaveManager.data.get("inventory", {}), disabled_reasons)
+
+
+func _on_item_used(item_key: String) -> void:
+	match item_key:
+		"mermaid_scale":
+			_use_mermaid_scale()
+		"trident":
+			_use_trident()
+		"turtle_shield":
+			_use_turtle_shield()
+	item_popup.close()
+
+
+func _use_mermaid_scale() -> void:
+	if player_hp >= PLAYER_MAX_HP:
+		return
+	if not SaveManager.consume_item("mermaid_scale"):
+		return
+
+	var healed_hp: int = ItemEffectsScript.apply_heal(player_hp, PLAYER_MAX_HP)
+	var healed_amount: int = healed_hp - player_hp
+	player_hp = healed_hp
+	_animate_hp_bar(octo_hp_bar, player_hp)
+	update_ui()
+	_log_system_note("🧜 Mermaid Scale used — healed %d HP." % healed_amount)
+
+
+func _use_trident() -> void:
+	if trident_armed:
+		return
+	if not SaveManager.consume_item("trident"):
+		return
+	trident_armed = true
+	_log_system_note("🔱 Trident armed — next hit deals +%d damage." % ItemEffectsScript.TRIDENT_BONUS_DAMAGE)
+
+
+func _use_turtle_shield() -> void:
+	if shield_armed:
+		return
+	if not SaveManager.consume_item("turtle_shield"):
+		return
+	shield_armed = true
+	_log_system_note("🐢 Turtle Shield armed — a defeat will become a draw.")
+
+
+## Appends a short, single-line note to the battle log (used for item
+## activations) rather than the full round-summary format.
+func _log_system_note(text: String) -> void:
+	var label: Label = Label.new()
+	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 15)
+	label.add_theme_color_override("font_color", Color(0.7, 0.85, 0.8, 1.0))
+	log_list.add_child(label)
+	_trim_log_display()
+	_scroll_log_to_bottom()
+
+
+## ------------------------------------------------------------------
+## Round flow
+## ------------------------------------------------------------------
+
+## Runs one full SeaLow round: player rolls, Crab rolls, hands are compared,
 ## and the loser takes damage. Guards against overlapping/duplicate rounds
 ## by immediately leaving PLAYER_TURN before any awaits happen.
 func perform_round() -> void:
 	state = BattleState.PLAYER_ROLLING
-	octo_hand_label.visible = false
-	crab_hand_label.visible = false
-	octo_hand_label.text = ""
-	crab_hand_label.text = ""
 	crab_dice_row.visible = false
-	message_label.text = "Little Octo is rolling..."
+	status_label.text = "Rolling..."
 	update_ui()
 
-	var octo_hand: DiceRules.DiceHand = await _roll_and_animate(octo_dice_row, octo_dice, OCTO_DICE_COUNT, "Little Octo")
+	var player_hand: DiceRules.DiceHand = await _roll_and_animate(player_dice_row, player_dice, PLAYER_DICE_COUNT)
 	if exiting_scene or not is_inside_tree():
 		return
 
-	octo_hand_label.text = _format_hand_display(octo_hand)
-	octo_hand_label.visible = true
-	message_label.text = "Little Octo rolled..."
-
-	await get_tree().create_timer(0.6).timeout
+	await get_tree().create_timer(0.3).timeout
 	if exiting_scene or not is_inside_tree():
 		return
 
 	state = BattleState.ENEMY_ROLLING
-	message_label.text = "Crab is rolling..."
 	update_ui()
 
-	var crab_hand: DiceRules.DiceHand = await _roll_and_animate(crab_dice_row, crab_dice, CRAB_DICE_COUNT, "Crab")
+	var crab_hand: DiceRules.DiceHand = await _roll_and_animate(crab_dice_row, crab_dice, CRAB_DICE_COUNT)
 	if exiting_scene or not is_inside_tree():
 		return
-
-	crab_hand_label.text = _format_hand_display(crab_hand)
-	crab_hand_label.visible = true
-	message_label.text = "Crab rolled..."
 
 	state = BattleState.RESOLVING_ROUND
 	update_ui()
 
-	await get_tree().create_timer(0.4).timeout
+	await get_tree().create_timer(0.3).timeout
 	if exiting_scene or not is_inside_tree():
 		return
 
-	_resolve_round(octo_hand, crab_hand)
+	_resolve_round(player_hand, crab_hand)
 
 
-## Rolls dice (auto-rerolling NO_POINT hands) and animates the result.
-## Returns the final scoring DiceHand.
-func _roll_and_animate(row: HBoxContainer, labels: Array[Label], count: int, creature_name: String) -> DiceRules.DiceHand:
+## Rolls dice (auto-rerolling NO_POINT hands) and plays the satisfying
+## multi-stage roll animation for the whole row in parallel. Returns the
+## final scoring DiceHand.
+func _roll_and_animate(row: HBoxContainer, dice_nodes: Array[Dice], count: int) -> DiceRules.DiceHand:
 	row.visible = true
 	var attempts: int = 0
 	var raw_dice: Array[int] = DiceRules.roll_dice(count)
 	var hand: DiceRules.DiceHand = DiceRules.evaluate_hand(raw_dice)
 
-	await animate_dice(labels, raw_dice)
+	await _animate_dice_row(dice_nodes, raw_dice)
 	if exiting_scene or not is_inside_tree():
 		return hand
 
 	while hand.hand_type == DiceRules.HandType.NO_POINT and attempts < DiceRules.MAX_REROLLS:
-		message_label.text = "%s: No point — rolling again..." % creature_name
-		await get_tree().create_timer(0.25).timeout
-		if exiting_scene or not is_inside_tree():
-			return hand
-
 		raw_dice = DiceRules.roll_dice(count)
 		hand = DiceRules.evaluate_hand(raw_dice)
-		await animate_dice(labels, raw_dice)
+		await _animate_dice_row(dice_nodes, raw_dice, 0.8)
 		if exiting_scene or not is_inside_tree():
 			return hand
 		attempts += 1
@@ -264,110 +372,158 @@ func _roll_and_animate(row: HBoxContainer, labels: Array[Label], count: int, cre
 	return hand
 
 
-func _format_hand_display(hand: DiceRules.DiceHand) -> String:
-	match hand.hand_type:
-		DiceRules.HandType.TIDAL_ROLL:
-			return "🌊 TIDAL ROLL! 🌊"
-		DiceRules.HandType.WASHED_OUT:
-			return "💀 WASHED OUT!"
-		_:
-			return hand.display_name
+## Plays each die's roll animation in parallel (fire-and-forget, then awaits
+## every die's `roll_finished` signal) so a row of 3 dice settles together
+## rather than one at a time.
+func _animate_dice_row(dice_nodes: Array[Dice], results: Array[int], duration: float = DICE_ROLL_DURATION) -> void:
+	for i in dice_nodes.size():
+		dice_nodes[i].play_roll_animation(results[i], duration)
+	for die in dice_nodes:
+		await die.roll_finished
 
 
-func _resolve_round(octo_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHand) -> void:
+func _resolve_round(player_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHand) -> void:
 	# Defensive guard: _roll_and_animate can return early with an unresolved
 	# NO_POINT hand if the scene is exiting mid-round. Never score that case.
-	if octo_hand.hand_type == DiceRules.HandType.NO_POINT or crab_hand.hand_type == DiceRules.HandType.NO_POINT:
+	if player_hand.hand_type == DiceRules.HandType.NO_POINT or crab_hand.hand_type == DiceRules.HandType.NO_POINT:
 		return
 
-	var result: int = DiceRules.compare_hands(octo_hand, crab_hand)
+	round_number += 1
+	var result: int = DiceRules.compare_hands(player_hand, crab_hand)
 
 	if result == 0:
-		message_label.text = "TIE!\nNobody takes damage."
-		await get_tree().create_timer(0.75).timeout
+		status_label.text = "Round %d: TIE — no damage." % round_number
+		_append_round_log(round_number, player_hand, 0, crab_hand, 0, true)
+		await get_tree().create_timer(0.9).timeout
 		if exiting_scene or not is_inside_tree():
 			return
 		_start_next_round()
 		return
 
 	if result == 1:
-		var damage: int = DiceRules.calculate_damage(octo_hand, crab_hand)
+		var base_damage: int = DiceRules.calculate_damage(player_hand, crab_hand)
+		var bonus_result: Dictionary = ItemEffectsScript.apply_damage_bonus(base_damage, trident_armed)
+		var damage: int = bonus_result["damage"]
+		if bonus_result["consumed"]:
+			trident_armed = false
+
 		apply_damage_to_crab(damage)
-		message_label.text = "%s\n\nLittle Octo wins the round!\nCrab takes %d damage." % [_format_round_summary(octo_hand, crab_hand), damage]
+		status_label.text = "Round %d: You dealt %d damage!" % [round_number, damage]
+		_append_round_log(round_number, player_hand, damage, crab_hand, 0, false, bonus_result["consumed"])
 
 		if crab_hp <= 0:
-			await get_tree().create_timer(0.75).timeout
+			await get_tree().create_timer(0.8).timeout
 			if exiting_scene or not is_inside_tree():
 				return
 			show_victory()
 			return
 	else:
-		var damage: int = DiceRules.calculate_damage(crab_hand, octo_hand)
+		var damage: int = DiceRules.calculate_damage(crab_hand, player_hand)
 		apply_damage_to_player(damage)
-		message_label.text = "%s\n\nCrab wins the round!\nLittle Octo takes %d damage." % [_format_round_summary(crab_hand, octo_hand), damage]
+		status_label.text = "Round %d: Crab dealt %d damage!" % [round_number, damage]
+		_append_round_log(round_number, player_hand, 0, crab_hand, damage, false)
 
-		if octo_hp <= 0:
-			await get_tree().create_timer(0.75).timeout
+		if player_hp <= 0:
+			await get_tree().create_timer(0.8).timeout
 			if exiting_scene or not is_inside_tree():
 				return
-			show_defeat()
+			if ItemEffectsScript.resolve_defeat(shield_armed):
+				shield_armed = false
+				show_draw()
+			else:
+				show_defeat()
 			return
 
-	await get_tree().create_timer(1.1).timeout
+	await get_tree().create_timer(0.9).timeout
 	if exiting_scene or not is_inside_tree():
 		return
 	_start_next_round()
 
 
-## Builds the "X beats Y" summary shown above the round result. When both
-## hands are pair hands that share the same pair value, calls that out
-## explicitly before comparing the unmatched (high) die, since that's the
-## tiebreaker that actually decided the round.
-func _format_round_summary(winner_hand: DiceRules.DiceHand, loser_hand: DiceRules.DiceHand) -> String:
-	if winner_hand.hand_type == DiceRules.HandType.POINT and loser_hand.hand_type == DiceRules.HandType.POINT and winner_hand.pair_value == loser_hand.pair_value:
-		return "Both have PAIR %d — HIGH %d beats HIGH %d!" % [winner_hand.pair_value, winner_hand.point_value, loser_hand.point_value]
+## ------------------------------------------------------------------
+## Battle log
+## ------------------------------------------------------------------
 
-	return "%s beats %s!" % [winner_hand.display_name, loser_hand.display_name]
+## Records a structured round entry (kept forever in `battle_log` for future
+## match-summary use) and appends a compact display line to the visible log.
+func _append_round_log(
+	p_round_number: int,
+	player_hand: DiceRules.DiceHand,
+	player_damage: int,
+	crab_hand: DiceRules.DiceHand,
+	crab_damage: int,
+	is_tie: bool,
+	trident_used: bool = false
+) -> void:
+	var entry: Dictionary = {
+		"round": p_round_number,
+		"player_dice": player_hand.dice_values,
+		"player_damage": player_damage,
+		"crab_dice": crab_hand.dice_values,
+		"crab_damage": crab_damage,
+		"is_tie": is_tie,
+		"trident_used": trident_used,
+	}
+	battle_log.append(entry)
+	_render_log_entry(entry)
+
+
+func _render_log_entry(entry: Dictionary) -> void:
+	var label: Label = Label.new()
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 17)
+
+	var player_emoji: String = PlayerDataScript.get_emoji(player_character_type)
+	var player_dice_text: String = _format_dice_values(entry["player_dice"])
+	var crab_dice_text: String = _format_dice_values(entry["crab_dice"])
+
+	if entry["is_tie"]:
+		label.text = "Round %d\n%s %s  🦀 %s  → TIE" % [
+			entry["round"], player_emoji, player_dice_text, crab_dice_text,
+		]
+	elif entry["player_damage"] > 0:
+		var trident_suffix: String = " 🔱" if entry["trident_used"] else ""
+		label.text = "Round %d\n%s %s → %d dmg%s\n🦀 %s → 0 dmg" % [
+			entry["round"], player_emoji, player_dice_text, entry["player_damage"], trident_suffix, crab_dice_text,
+		]
+	else:
+		label.text = "Round %d\n%s %s → 0 dmg\n🦀 %s → %d dmg" % [
+			entry["round"], player_emoji, player_dice_text, crab_dice_text, entry["crab_damage"],
+		]
+
+	log_list.add_child(label)
+	_trim_log_display()
+	_scroll_log_to_bottom()
+
+
+func _format_dice_values(values: Array[int]) -> String:
+	var parts: PackedStringArray = []
+	for value in values:
+		parts.append(str(value))
+	return "(%s)" % ",".join(parts)
+
+
+## Keeps only the most recent MAX_LOG_ENTRIES_SHOWN entries visible so the
+## log stays compact on mobile; older entries remain in `battle_log`.
+func _trim_log_display() -> void:
+	while log_list.get_child_count() > MAX_LOG_ENTRIES_SHOWN:
+		var oldest: Node = log_list.get_child(0)
+		log_list.remove_child(oldest)
+		oldest.queue_free()
+
+
+func _scroll_log_to_bottom() -> void:
+	await get_tree().process_frame
+	if is_inside_tree():
+		log_scroll.scroll_vertical = int(log_scroll.get_v_scroll_bar().max_value)
 
 
 func _start_next_round() -> void:
 	state = BattleState.PLAYER_TURN
-	octo_dice_row.visible = false
+	player_dice_row.visible = false
 	crab_dice_row.visible = false
-	octo_hand_label.visible = false
-	crab_hand_label.visible = false
-	message_label.text = "What will Octo do?"
+	status_label.text = "Tap ROLL to begin"
 	update_ui()
-
-
-func animate_dice(labels: Array[Label], results: Array[int]) -> void:
-	var active_labels: Array[Label] = labels.slice(0, results.size())
-	var pulse_tweens: Array[Tween] = []
-	for label in active_labels:
-		label.visible = true
-		pulse_tweens.append(null)
-
-	var duration: float = 0.6
-	var step: float = 0.08
-	var elapsed: float = 0.0
-
-	while elapsed < duration:
-		for i in active_labels.size():
-			var label: Label = active_labels[i]
-			label.text = DICE_FACES[randi_range(0, 5)]
-			if pulse_tweens[i] != null and pulse_tweens[i].is_valid():
-				pulse_tweens[i].kill()
-			var tween: Tween = create_tween()
-			tween.tween_property(label, "scale", Vector2(1.15, 1.15), step * 0.5)
-			tween.tween_property(label, "scale", Vector2(1.0, 1.0), step * 0.5)
-			pulse_tweens[i] = tween
-		await get_tree().create_timer(step).timeout
-		if exiting_scene or not is_inside_tree():
-			return
-		elapsed += step
-
-	for i in active_labels.size():
-		active_labels[i].text = DICE_FACES[results[i] - 1]
 
 
 func apply_damage_to_crab(amount: int) -> void:
@@ -378,9 +534,9 @@ func apply_damage_to_crab(amount: int) -> void:
 
 
 func apply_damage_to_player(amount: int) -> void:
-	octo_hp = maxi(0, octo_hp - amount)
+	player_hp = maxi(0, player_hp - amount)
 	update_ui()
-	_animate_hp_bar(octo_hp_bar, octo_hp)
+	_animate_hp_bar(octo_hp_bar, player_hp)
 	_show_floating_damage(octo_damage_label, amount)
 
 
@@ -400,10 +556,11 @@ func _show_floating_damage(label: Label, amount: int) -> void:
 
 func show_victory() -> void:
 	state = BattleState.VICTORY
-	message_label.text = "Victory!"
+	status_label.text = "Victory!"
 	update_ui()
 
 	_award_victory_shells()
+	SaveManager.register_battle_win()
 	victory_panel.visible = true
 
 
@@ -422,9 +579,18 @@ func _award_victory_shells() -> void:
 
 func show_defeat() -> void:
 	state = BattleState.DEFEAT
-	message_label.text = "Defeat..."
+	status_label.text = "Defeat..."
 	update_ui()
 	defeat_panel.visible = true
+
+
+## Turtle Shield triggered: the opponent is NOT counted as defeated, the
+## player receives no victory reward, and the player simply returns home.
+func show_draw() -> void:
+	state = BattleState.DRAW
+	status_label.text = "Draw."
+	update_ui()
+	draw_panel.visible = true
 
 
 func restart_battle() -> void:
