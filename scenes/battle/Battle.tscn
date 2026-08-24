@@ -10,13 +10,6 @@ bg_color = Color(0.0196078, 0.0588235, 0.0941176, 1)
 corner_radius_top_left = 48
 corner_radius_top_right = 48
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bubble"]
-bg_color = Color(0.564706, 0.788235, 0.85098, 0.28)
-corner_radius_top_left = 64
-corner_radius_top_right = 64
-corner_radius_bottom_right = 64
-corner_radius_bottom_left = 64
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_crab_fill"]
 bg_color = Color(0.870588, 0.360784, 0.298039, 1)
 corner_radius_top_left = 8
@@ -31,16 +24,16 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_message"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_banner"]
 bg_color = Color(0.0784314, 0.156863, 0.207843, 0.92)
 corner_radius_top_left = 22
 corner_radius_top_right = 22
 corner_radius_bottom_right = 22
 corner_radius_bottom_left = 22
 content_margin_left = 18.0
-content_margin_top = 16.0
+content_margin_top = 10.0
 content_margin_right = 18.0
-content_margin_bottom = 16.0
+content_margin_bottom = 10.0
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -54,16 +47,27 @@ corner_radius_top_right = 18
 corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
 content_margin_left = 16.0
-content_margin_top = 12.0
+content_margin_top = 10.0
 content_margin_right = 16.0
-content_margin_bottom = 12.0
+content_margin_bottom = 10.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_playertint"]
-bg_color = Color(1, 1, 1, 0.08)
-corner_radius_top_left = 400
-corner_radius_top_right = 400
-corner_radius_bottom_right = 400
-corner_radius_bottom_left = 400
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_recentrounds"]
+bg_color = Color(0.0784314, 0.156863, 0.207843, 0.7)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_colordot"]
+bg_color = Color(0.6, 0.9, 0.82, 1.0)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
 
 [node name="Battle" type="Control"]
 layout_mode = 3
@@ -104,33 +108,6 @@ grow_horizontal = 2
 grow_vertical = 0
 color = Color(0.0235294, 0.0862745, 0.145098, 1)
 
-[node name="Bubble1" type="Panel" parent="."]
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.12
-anchor_top = 0.3
-anchor_right = 0.19
-anchor_bottom = 0.34
-theme_override_styles/panel = SubResource("StyleBoxFlat_bubble")
-
-[node name="Bubble2" type="Panel" parent="."]
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.22
-anchor_top = 0.5
-anchor_right = 0.27
-anchor_bottom = 0.53
-theme_override_styles/panel = SubResource("StyleBoxFlat_bubble")
-
-[node name="Bubble3" type="Panel" parent="."]
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.08
-anchor_top = 0.62
-anchor_right = 0.15
-anchor_bottom = 0.66
-theme_override_styles/panel = SubResource("StyleBoxFlat_bubble")
-
 [node name="SeaFloor" type="Panel" parent="."]
 layout_mode = 1
 anchors_preset = 12
@@ -148,50 +125,49 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 28
-theme_override_constants/margin_top = 64
-theme_override_constants/margin_right = 28
-theme_override_constants/margin_bottom = 40
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 60
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 32
 
 [node name="MainVBox" type="VBoxContainer" parent="SafeArea"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 10
 
 [node name="Battlefield" type="Control" parent="SafeArea/MainVBox"]
-custom_minimum_size = Vector2(0, 340)
+custom_minimum_size = Vector2(0, 420)
 layout_mode = 2
 size_flags_vertical = 3
 
 [node name="EnemyCard" type="PanelContainer" parent="SafeArea/MainVBox/Battlefield"]
 layout_mode = 1
 anchors_preset = 0
-anchor_right = 0.6
-anchor_bottom = 0.28
+anchor_right = 0.62
+anchor_bottom = 0.15
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
 [node name="VBox" type="VBoxContainer" parent="SafeArea/MainVBox/Battlefield/EnemyCard"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="NameRow" type="HBoxContainer" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox"]
 layout_mode = 2
 
 [node name="EnemyName" type="Label" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox/NameRow"]
-unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 22
 text = "🦀 CRAB"
 
 [node name="EnemyLevel" type="Label" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox/NameRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
 text = "LV. 1"
 
 [node name="CrabHpBar" type="ProgressBar" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 18)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_crab_fill")
 max_value = 10.0
@@ -201,17 +177,19 @@ show_percentage = false
 [node name="CrabHpLabel" type="Label" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
 text = "HP 10 / 10"
 
 [node name="EnemySprite" type="Label" parent="SafeArea/MainVBox/Battlefield"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 0
-anchor_left = 0.55
+anchor_left = 0.32
+anchor_top = 0.10
 anchor_right = 1.0
-anchor_bottom = 0.52
-theme_override_font_sizes/font_size = 112
+anchor_bottom = 0.36
+theme_override_font_sizes/font_size = 108
 text = "🦀"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -220,34 +198,115 @@ vertical_alignment = 1
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 0
-anchor_left = 0.55
+anchor_left = 0.32
+anchor_top = 0.06
 anchor_right = 1.0
-anchor_bottom = 0.3
-theme_override_font_sizes/font_size = 32
+anchor_bottom = 0.28
+theme_override_font_sizes/font_size = 36
 theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
 text = "-0"
 horizontal_alignment = 1
 visible = false
 
-[node name="PlayerBodyTint" type="Panel" parent="SafeArea/MainVBox/Battlefield"]
-unique_name_in_owner = true
+[node name="EnemyRollArea" type="VBoxContainer" parent="SafeArea/MainVBox/Battlefield"]
 layout_mode = 1
 anchors_preset = 0
-anchor_left = 0.46
-anchor_top = 0.38
+anchor_left = 0.1
+anchor_top = 0.35
+anchor_right = 0.9
+anchor_bottom = 0.5
+theme_override_constants/separation = 4
+
+[node name="EnemyRollLabel" type="Label" parent="SafeArea/MainVBox/Battlefield/EnemyRollArea"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.870588, 0.360784, 0.298039, 1)
+text = "CRAB'S DICE"
+horizontal_alignment = 1
+
+[node name="EnemyDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/Battlefield/EnemyRollArea"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+visible = false
+
+[node name="EnemyDie1" parent="SafeArea/MainVBox/Battlefield/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="EnemyDie2" parent="SafeArea/MainVBox/Battlefield/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="EnemyDie3" parent="SafeArea/MainVBox/Battlefield/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="TurnBannerPanel" type="PanelContainer" parent="SafeArea/MainVBox/Battlefield"]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.06
+anchor_top = 0.5
 anchor_right = 0.94
+anchor_bottom = 0.62
+theme_override_styles/panel = SubResource("StyleBoxFlat_banner")
+
+[node name="TurnBanner" type="Label" parent="SafeArea/MainVBox/Battlefield/TurnBannerPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Tap ROLL to begin"
+autowrap_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PlayerRollArea" type="VBoxContainer" parent="SafeArea/MainVBox/Battlefield"]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.1
+anchor_top = 0.63
+anchor_right = 0.9
 anchor_bottom = 0.78
-theme_override_styles/panel = SubResource("StyleBoxFlat_playertint")
+theme_override_constants/separation = 4
+
+[node name="PlayerRollLabel" type="Label" parent="SafeArea/MainVBox/Battlefield/PlayerRollArea"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.34902, 0.784314, 0.698039, 1)
+text = "YOUR ROLL"
+horizontal_alignment = 1
+
+[node name="PlayerDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/Battlefield/PlayerRollArea"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+visible = false
+
+[node name="PlayerDie1" parent="SafeArea/MainVBox/Battlefield/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PlayerDie2" parent="SafeArea/MainVBox/Battlefield/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PlayerDie3" parent="SafeArea/MainVBox/Battlefield/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
 
 [node name="PlayerSprite" type="Label" parent="SafeArea/MainVBox/Battlefield"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 0
-anchor_left = 0.42
-anchor_top = 0.34
-anchor_right = 1.0
-anchor_bottom = 0.82
-theme_override_font_sizes/font_size = 128
+anchor_left = 0.0
+anchor_top = 0.64
+anchor_right = 0.68
+anchor_bottom = 0.9
+theme_override_font_sizes/font_size = 118
 text = "🐙"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -256,11 +315,11 @@ vertical_alignment = 1
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 0
-anchor_left = 0.42
-anchor_top = 0.3
-anchor_right = 1.0
-anchor_bottom = 0.5
-theme_override_font_sizes/font_size = 32
+anchor_left = 0.0
+anchor_top = 0.6
+anchor_right = 0.68
+anchor_bottom = 0.8
+theme_override_font_sizes/font_size = 36
 theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
 text = "-0"
 horizontal_alignment = 1
@@ -269,35 +328,43 @@ visible = false
 [node name="PlayerCard" type="PanelContainer" parent="SafeArea/MainVBox/Battlefield"]
 layout_mode = 1
 anchors_preset = 0
-anchor_left = 0.34
-anchor_top = 0.78
+anchor_left = 0.38
+anchor_top = 0.86
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
 [node name="VBox" type="VBoxContainer" parent="SafeArea/MainVBox/Battlefield/PlayerCard"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="NameRow" type="HBoxContainer" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox"]
 layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PlayerColorDot" type="Panel" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox/NameRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_colordot")
 
 [node name="OctoName" type="Label" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox/NameRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 22
 text = "🐙 LITTLE OCTO"
 
 [node name="OctoLevel" type="Label" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox/NameRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
 text = "LV. 1"
 
 [node name="OctoHpBar" type="ProgressBar" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 18)
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_octo_fill")
 max_value = 12.0
@@ -307,119 +374,76 @@ show_percentage = false
 [node name="OctoHpLabel" type="Label" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
 text = "HP 12 / 12"
 
-[node name="BottomRow" type="HBoxContainer" parent="SafeArea/MainVBox"]
+[node name="RecentRoundsPanel" type="PanelContainer" parent="SafeArea/MainVBox"]
+custom_minimum_size = Vector2(0, 118)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_recentrounds")
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/MainVBox/RecentRoundsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="SafeArea/MainVBox/RecentRoundsPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
+text = "RECENT ROUNDS"
+
+[node name="LogScroll" type="ScrollContainer" parent="SafeArea/MainVBox/RecentRoundsPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 14
+follow_focus = false
 
-[node name="MessagePanel" type="PanelContainer" parent="SafeArea/MainVBox/BottomRow"]
+[node name="LogList" type="VBoxContainer" parent="SafeArea/MainVBox/RecentRoundsPanel/VBox/LogScroll"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_message")
+theme_override_constants/separation = 4
 
-[node name="VBox" type="VBoxContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel"]
+[node name="ActionArea" type="VBoxContainer" parent="SafeArea/MainVBox"]
 layout_mode = 2
-size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="StatusLabel" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
+[node name="RollButton" type="Button" parent="SafeArea/MainVBox/ActionArea"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Tap ROLL to begin"
-autowrap_mode = 2
-horizontal_alignment = 1
-
-[node name="PlayerDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 12
-visible = false
-
-[node name="PlayerDie1" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/PlayerDiceRow" instance=ExtResource("3_dice")]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="PlayerDie2" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/PlayerDiceRow" instance=ExtResource("3_dice")]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="PlayerDie3" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/PlayerDiceRow" instance=ExtResource("3_dice")]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="EnemyDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 12
-visible = false
-
-[node name="EnemyDie1" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/EnemyDiceRow" instance=ExtResource("3_dice")]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="EnemyDie2" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/EnemyDiceRow" instance=ExtResource("3_dice")]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="EnemyDie3" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/EnemyDiceRow" instance=ExtResource("3_dice")]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="LogScroll" type="ScrollContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 130)
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="LogList" type="VBoxContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/LogScroll"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 10
-
-[node name="ActionMenu" type="VBoxContainer" parent="SafeArea/MainVBox/BottomRow"]
-custom_minimum_size = Vector2(168, 0)
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="RollButton" type="Button" parent="SafeArea/MainVBox/BottomRow/ActionMenu"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 64)
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 30
 text = "ROLL"
 
-[node name="ItemButton" type="Button" parent="SafeArea/MainVBox/BottomRow/ActionMenu"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
+[node name="SecondaryRow" type="HBoxContainer" parent="SafeArea/MainVBox/ActionArea"]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/font_size = 20
+theme_override_constants/separation = 10
+
+[node name="ItemButton" type="Button" parent="SafeArea/MainVBox/ActionArea/SecondaryRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
 text = "ITEM"
 
-[node name="RunButton" type="Button" parent="SafeArea/MainVBox/BottomRow/ActionMenu"]
+[node name="RunButton" type="Button" parent="SafeArea/MainVBox/ActionArea/SecondaryRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/font_size = 20
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
 text = "RUN"
 
-[node name="RulesButton" type="Button" parent="SafeArea/MainVBox/BottomRow/ActionMenu"]
+[node name="RulesButton" type="Button" parent="SafeArea/MainVBox/ActionArea/SecondaryRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/font_size = 20
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
 text = "ⓘ RULES"
 
 [node name="VictoryPanel" type="Control" parent="."]
@@ -720,36 +744,30 @@ size_flags_vertical = 3
 [node name="Body" type="Label" parent="RulesPanel/SafeArea/VBox/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 19
 theme_override_constants/line_spacing = 6
-text = "🌊 TIDAL ROLL
-4 • 5 • 6
-Strongest hand.
+text = "Each round, you and the Crab both roll 3 dice.
+Whoever rolls the stronger hand wins the round and damages the other.
 
-🎲 TRIPLE
-Three matching dice.
-Higher triple wins.
+HAND STRENGTH (weakest → strongest)
+💀 WASHED OUT (1•2•3) — weakest, auto-loses.
+🎯 PAIR + POINT — a matching pair plus an odd die. Higher pair wins; ties break on the odd die.
+🎲 TRIPLE — three matching dice. Higher triple wins.
+🌊 TIDAL ROLL (4•5•6) — strongest possible hand.
+No-point rolls (no pair, triple, or tidal) automatically reroll.
 
-🐚 PAIR
-Compare the matching pair first.
-If the pair matches, compare the odd die.
+⚔️ HOW DAMAGE WORKS
+🌊 TIDAL / AUTOMATIC WIN — Deals 3 HP. (Rolling Tidal, or your opponent Washing Out, is an automatic win.)
+🎲 TRIPLES — Deals 2 HP.
+🎯 PAIR + POINT — Deals 1 HP.
+🤝 TIE — No damage. Roll again.
 
-Example:
-3 • 3 • 2
-beats
-1 • 1 • 6
-
-💀 WASHED OUT
-1 • 2 • 3
-Weakest hand.
-
-Whoever rolls the stronger hand wins the round and
-deals damage. No-point rolls automatically reroll.
+Reduce your opponent to 0 HP to win the battle.
 
 🎒 ITEMS
-Use one item per battle from the ITEM menu:
+Items can change the outcome of combat — use one from the ITEM menu:
 🐢 Turtle Shield — turns a defeat into a draw.
-🔱 Trident — +2 damage on your next hit.
+🔱 Trident — +2 damage on your next successful hit.
 🧜 Mermaid Scale — restore 2 HP."
 horizontal_alignment = 1
 autowrap_mode = 2

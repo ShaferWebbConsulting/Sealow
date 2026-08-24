@@ -127,6 +127,14 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 42
 text = "DIVE"
 
+[node name="ShopButton" type="Button" parent="SafeArea/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "🐚 SHOP"
+
 [node name="SettingsButton" type="Button" parent="SafeArea/Content" unique_id=28326919]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 84)

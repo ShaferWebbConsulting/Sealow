@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8x2f1flowdriver"]
+
+[ext_resource type="Script" path="res://tests/integration_flow_driver.gd" id="1"]
+
+[node name="IntegrationFlowDriver" type="Node"]
+script = ExtResource("1")

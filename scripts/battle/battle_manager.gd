@@ -12,7 +12,13 @@ const CRAB_DICE_COUNT: int = 3
 const VICTORY_SHELLS: int = 10
 const HP_TWEEN_DURATION: float = 0.3
 const DICE_ROLL_DURATION: float = 1.4
-const MAX_LOG_ENTRIES_SHOWN: int = 5
+## Only the 3 most recent rounds are shown in the compact Recent Rounds log
+## (newest first); the full history stays in `battle_log`.
+const MAX_LOG_ENTRIES_SHOWN: int = 3
+## Attack lunge/shake animation timing (spec: ~0.4-0.7s).
+const ATTACK_LUNGE_DURATION: float = 0.18
+const ATTACK_SHAKE_DURATION: float = 0.22
+const ATTACK_RETURN_DURATION: float = 0.18
 
 ## Only BattleState.PLAYER_TURN allows the Roll/Item buttons to be pressed.
 ## Every other state means a turn is currently animating/resolving.
@@ -53,7 +59,12 @@ var _hp_bar_tweens: Dictionary = {}
 
 var player_character_type: String = "octopus"
 
-@onready var status_label: Label = %StatusLabel
+## Original (rest) positions of the creature sprites, captured once so the
+## attack lunge animation can always return them exactly where they started.
+var _player_sprite_home: Vector2 = Vector2.ZERO
+var _enemy_sprite_home: Vector2 = Vector2.ZERO
+
+@onready var turn_banner: Label = %TurnBanner
 @onready var octo_hp_label: Label = %OctoHpLabel
 @onready var crab_hp_label: Label = %CrabHpLabel
 @onready var octo_hp_bar: ProgressBar = %OctoHpBar
@@ -63,6 +74,8 @@ var player_character_type: String = "octopus"
 @onready var run_button: Button = %RunButton
 @onready var rules_button: Button = %RulesButton
 
+@onready var player_roll_label: Label = %PlayerRollLabel
+@onready var enemy_roll_label: Label = %EnemyRollLabel
 @onready var player_dice_row: HBoxContainer = %PlayerDiceRow
 @onready var crab_dice_row: HBoxContainer = %EnemyDiceRow
 @onready var player_dice: Array[Dice] = [%PlayerDie1, %PlayerDie2, %PlayerDie3]
@@ -76,7 +89,8 @@ var player_character_type: String = "octopus"
 
 @onready var player_name_label: Label = %OctoName
 @onready var player_sprite_label: Label = %PlayerSprite
-@onready var player_body_tint: Panel = %PlayerBodyTint
+@onready var enemy_sprite_label: Label = %EnemySprite
+@onready var player_color_dot: Panel = %PlayerColorDot
 
 @onready var victory_panel: Control = %VictoryPanel
 @onready var shells_earned_label: Label = %ShellsEarnedLabel
@@ -116,14 +130,21 @@ func _ready() -> void:
 	_setup_player_character()
 	start_battle()
 
+	# Sprite "home" positions must be captured after the first layout pass
+	# (anchors have been resolved into actual positions), so the attack
+	# lunge animation always has a correct rest position to return to.
+	await get_tree().process_frame
+	_player_sprite_home = player_sprite_label.position
+	_enemy_sprite_home = enemy_sprite_label.position
+
 
 func _exit_tree() -> void:
 	exiting_scene = true
 
 
 ## Applies the player's saved creature choice to the name/sprite/HP-bar
-## labels and tints the body-preview panel with their chosen color. The
-## emoji glyph itself is never tinted (see PlayerData.CHARACTER_COLORS doc).
+## labels and shows their chosen body color as a small dot next to their
+## name (not a giant overlay behind the character).
 func _setup_player_character() -> void:
 	player_character_type = SaveManager.get_character_type()
 	player_sprite_label.text = PlayerDataScript.get_emoji(player_character_type)
@@ -132,11 +153,10 @@ func _setup_player_character() -> void:
 		PlayerDataScript.get_display_name(player_character_type).to_upper(),
 	]
 
-	var tint_style: StyleBoxFlat = StyleBoxFlat.new()
-	tint_style.bg_color = PlayerDataScript.get_color(SaveManager.get_character_color())
-	tint_style.bg_color.a = 0.22
-	tint_style.set_corner_radius_all(400)
-	player_body_tint.add_theme_stylebox_override("panel", tint_style)
+	var dot_style: StyleBoxFlat = StyleBoxFlat.new()
+	dot_style.bg_color = PlayerDataScript.get_color(SaveManager.get_character_color())
+	dot_style.set_corner_radius_all(20)
+	player_color_dot.add_theme_stylebox_override("panel", dot_style)
 
 
 func start_battle() -> void:
@@ -172,7 +192,7 @@ func start_battle() -> void:
 	octo_hp_bar.value = PLAYER_MAX_HP
 	crab_hp_bar.value = CRAB_MAX_HP
 
-	status_label.text = "Tap ROLL to begin"
+	turn_banner.text = "Tap ROLL to begin"
 	update_ui()
 
 
@@ -294,17 +314,17 @@ func _use_turtle_shield() -> void:
 	_log_system_note("🐢 Turtle Shield armed — a defeat will become a draw.")
 
 
-## Appends a short, single-line note to the battle log (used for item
-## activations) rather than the full round-summary format.
+## Appends a short, single-line note to the top of the Recent Rounds log
+## (used for item activations) rather than the full round-summary format.
 func _log_system_note(text: String) -> void:
 	var label: Label = Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", 15)
+	label.add_theme_font_size_override("font_size", 14)
 	label.add_theme_color_override("font_color", Color(0.7, 0.85, 0.8, 1.0))
 	log_list.add_child(label)
+	log_list.move_child(label, 0)
 	_trim_log_display()
-	_scroll_log_to_bottom()
 
 
 ## ------------------------------------------------------------------
@@ -317,7 +337,7 @@ func _log_system_note(text: String) -> void:
 func perform_round() -> void:
 	state = BattleState.PLAYER_ROLLING
 	crab_dice_row.visible = false
-	status_label.text = "Rolling..."
+	_set_turn_banner("🐙 %s IS ROLLING" % PlayerDataScript.get_display_name(player_character_type).to_upper())
 	update_ui()
 
 	var player_hand: DiceRules.DiceHand = await _roll_and_animate(player_dice_row, player_dice, PLAYER_DICE_COUNT)
@@ -329,6 +349,7 @@ func perform_round() -> void:
 		return
 
 	state = BattleState.ENEMY_ROLLING
+	_set_turn_banner("🦀 CRAB IS ROLLING")
 	update_ui()
 
 	var crab_hand: DiceRules.DiceHand = await _roll_and_animate(crab_dice_row, crab_dice, CRAB_DICE_COUNT)
@@ -342,7 +363,13 @@ func perform_round() -> void:
 	if exiting_scene or not is_inside_tree():
 		return
 
-	_resolve_round(player_hand, crab_hand)
+	await _resolve_round(player_hand, crab_hand)
+
+
+## Sets the central turn/result banner text. Kept as its own helper so every
+## place that updates the banner goes through one spot.
+func _set_turn_banner(text: String) -> void:
+	turn_banner.text = text
 
 
 ## Rolls dice (auto-rerolling NO_POINT hands) and plays the satisfying
@@ -404,39 +431,59 @@ func _resolve_round(player_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHa
 	var result: int = DiceRules.compare_hands(player_hand, crab_hand)
 
 	if result == 0:
-		status_label.text = "Round %d: TIE — no damage." % round_number
-		_append_round_log(round_number, player_hand, 0, crab_hand, 0, true)
+		_set_turn_banner("TIE — ROLL AGAIN")
+		_append_round_log(round_number, true, false, "", 0, false)
 		await get_tree().create_timer(0.9).timeout
 		if exiting_scene or not is_inside_tree():
 			return
 		_start_next_round()
 		return
 
-	if result == 1:
-		var base_damage: int = DiceRules.calculate_damage(player_hand, crab_hand)
+	var player_won: bool = result == 1
+	var winner_hand: DiceRules.DiceHand = player_hand if player_won else crab_hand
+	var loser_hand: DiceRules.DiceHand = crab_hand if player_won else player_hand
+	var result_type_label: String = DiceRules.result_label(winner_hand, loser_hand)
+	var base_damage: int = DiceRules.damage_for_result(winner_hand, loser_hand)
+
+	var damage: int = base_damage
+	var trident_used: bool = false
+	if player_won:
 		var bonus_result: Dictionary = ItemEffectsScript.apply_damage_bonus(base_damage, trident_armed)
-		var damage: int = bonus_result["damage"]
-		if bonus_result["consumed"]:
+		damage = bonus_result["damage"]
+		trident_used = bonus_result["consumed"]
+		if trident_used:
 			trident_armed = false
 
+	var trident_tag: String = " 🔱" if trident_used else ""
+	_set_turn_banner("%s!\n%s\n-%d HP%s" % [
+		"YOU WIN" if player_won else "CRAB WINS", result_type_label, damage, trident_tag,
+	])
+	_append_round_log(round_number, false, player_won, result_type_label, damage, trident_used)
+
+	await get_tree().create_timer(0.5).timeout
+	if exiting_scene or not is_inside_tree():
+		return
+
+	if player_won:
+		await _play_attack_animation(player_sprite_label, enemy_sprite_label, _player_sprite_home, _enemy_sprite_home)
+		if exiting_scene or not is_inside_tree():
+			return
 		apply_damage_to_crab(damage)
-		status_label.text = "Round %d: You dealt %d damage!" % [round_number, damage]
-		_append_round_log(round_number, player_hand, damage, crab_hand, 0, false, bonus_result["consumed"])
 
 		if crab_hp <= 0:
-			await get_tree().create_timer(0.8).timeout
+			await get_tree().create_timer(0.6).timeout
 			if exiting_scene or not is_inside_tree():
 				return
 			show_victory()
 			return
 	else:
-		var damage: int = DiceRules.calculate_damage(crab_hand, player_hand)
+		await _play_attack_animation(enemy_sprite_label, player_sprite_label, _enemy_sprite_home, _player_sprite_home)
+		if exiting_scene or not is_inside_tree():
+			return
 		apply_damage_to_player(damage)
-		status_label.text = "Round %d: Crab dealt %d damage!" % [round_number, damage]
-		_append_round_log(round_number, player_hand, 0, crab_hand, damage, false)
 
 		if player_hp <= 0:
-			await get_tree().create_timer(0.8).timeout
+			await get_tree().create_timer(0.6).timeout
 			if exiting_scene or not is_inside_tree():
 				return
 			if ItemEffectsScript.resolve_defeat(shield_armed):
@@ -446,95 +493,113 @@ func _resolve_round(player_hand: DiceRules.DiceHand, crab_hand: DiceRules.DiceHa
 				show_defeat()
 			return
 
-	await get_tree().create_timer(0.9).timeout
+	await get_tree().create_timer(0.7).timeout
 	if exiting_scene or not is_inside_tree():
 		return
 	_start_next_round()
 
 
 ## ------------------------------------------------------------------
-## Battle log
+## Attack animation
+## ------------------------------------------------------------------
+
+## Plays a short, cute lunge-and-return attack: the attacker quickly moves
+## toward the defender, the defender shakes on "impact", then the attacker
+## returns to its stored home position. Damage/HP changes are applied by the
+## caller right at the moment of impact (immediately after this returns).
+func _play_attack_animation(attacker: Label, defender: Label, attacker_home: Vector2, defender_home: Vector2) -> void:
+	var toward: Vector2 = (defender_home - attacker_home)
+	var lunge_offset: Vector2 = toward.normalized() * minf(toward.length() * 0.35, 60.0) if toward.length() > 0.0 else Vector2.ZERO
+
+	var lunge_tween: Tween = create_tween()
+	lunge_tween.tween_property(attacker, "position", attacker_home + lunge_offset, ATTACK_LUNGE_DURATION) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	await lunge_tween.finished
+	if exiting_scene or not is_inside_tree():
+		return
+
+	# Defender "shake" on impact.
+	var shake_tween: Tween = create_tween()
+	var shake_amount: float = 10.0
+	shake_tween.tween_property(defender, "position:x", defender_home.x + shake_amount, ATTACK_SHAKE_DURATION * 0.25)
+	shake_tween.tween_property(defender, "position:x", defender_home.x - shake_amount, ATTACK_SHAKE_DURATION * 0.25)
+	shake_tween.tween_property(defender, "position:x", defender_home.x, ATTACK_SHAKE_DURATION * 0.5)
+	await shake_tween.finished
+	if exiting_scene or not is_inside_tree():
+		return
+
+	var return_tween: Tween = create_tween()
+	return_tween.tween_property(attacker, "position", attacker_home, ATTACK_RETURN_DURATION) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	await return_tween.finished
+
+
+## ------------------------------------------------------------------
+## Battle log (Recent Rounds)
 ## ------------------------------------------------------------------
 
 ## Records a structured round entry (kept forever in `battle_log` for future
-## match-summary use) and appends a compact display line to the visible log.
+## match-summary use) and prepends a compact display line to the visible
+## Recent Rounds log (newest entry first).
 func _append_round_log(
 	p_round_number: int,
-	player_hand: DiceRules.DiceHand,
-	player_damage: int,
-	crab_hand: DiceRules.DiceHand,
-	crab_damage: int,
 	is_tie: bool,
-	trident_used: bool = false
+	player_won: bool,
+	result_type_label: String,
+	damage: int,
+	trident_used: bool
 ) -> void:
 	var entry: Dictionary = {
 		"round": p_round_number,
-		"player_dice": player_hand.dice_values,
-		"player_damage": player_damage,
-		"crab_dice": crab_hand.dice_values,
-		"crab_damage": crab_damage,
 		"is_tie": is_tie,
+		"player_won": player_won,
+		"result_type_label": result_type_label,
+		"damage": damage,
 		"trident_used": trident_used,
 	}
 	battle_log.append(entry)
 	_render_log_entry(entry)
 
 
+## Renders one compact, unambiguous line answering "who won, what type, how
+## much damage" — never raw dice/debug text. Ties are shown distinctly since
+## no damage was dealt.
 func _render_log_entry(entry: Dictionary) -> void:
 	var label: Label = Label.new()
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", 17)
-
-	var player_emoji: String = PlayerDataScript.get_emoji(player_character_type)
-	var player_dice_text: String = _format_dice_values(entry["player_dice"])
-	var crab_dice_text: String = _format_dice_values(entry["crab_dice"])
+	label.add_theme_font_size_override("font_size", 15)
 
 	if entry["is_tie"]:
-		label.text = "Round %d\n%s %s  🦀 %s  → TIE" % [
-			entry["round"], player_emoji, player_dice_text, crab_dice_text,
-		]
-	elif entry["player_damage"] > 0:
-		var trident_suffix: String = " 🔱" if entry["trident_used"] else ""
-		label.text = "Round %d\n%s %s → %d dmg%s\n🦀 %s → 0 dmg" % [
-			entry["round"], player_emoji, player_dice_text, entry["player_damage"], trident_suffix, crab_dice_text,
-		]
+		label.text = "R%d  🤝 TIE · Roll again" % entry["round"]
 	else:
-		label.text = "Round %d\n%s %s → 0 dmg\n🦀 %s → %d dmg" % [
-			entry["round"], player_emoji, player_dice_text, crab_dice_text, entry["crab_damage"],
+		var player_emoji: String = PlayerDataScript.get_emoji(player_character_type)
+		var winner_emoji: String = player_emoji if entry["player_won"] else "🦀"
+		var loser_name: String = "Crab" if entry["player_won"] else "Octo"
+		var trident_suffix: String = " 🔱" if entry["trident_used"] else ""
+		label.text = "R%d  %s %s%s   %s -%d HP" % [
+			entry["round"], winner_emoji, entry["result_type_label"], trident_suffix, loser_name, entry["damage"],
 		]
 
 	log_list.add_child(label)
+	log_list.move_child(label, 0)
 	_trim_log_display()
-	_scroll_log_to_bottom()
-
-
-func _format_dice_values(values: Array[int]) -> String:
-	var parts: PackedStringArray = []
-	for value in values:
-		parts.append(str(value))
-	return "(%s)" % ",".join(parts)
 
 
 ## Keeps only the most recent MAX_LOG_ENTRIES_SHOWN entries visible so the
-## log stays compact on mobile; older entries remain in `battle_log`.
+## Recent Rounds panel stays compact on mobile; older entries remain in
+## `battle_log`. Since new entries are inserted at index 0, the oldest
+## visible entry is always the last child.
 func _trim_log_display() -> void:
 	while log_list.get_child_count() > MAX_LOG_ENTRIES_SHOWN:
-		var oldest: Node = log_list.get_child(0)
+		var oldest: Node = log_list.get_child(log_list.get_child_count() - 1)
 		log_list.remove_child(oldest)
 		oldest.queue_free()
-
-
-func _scroll_log_to_bottom() -> void:
-	await get_tree().process_frame
-	if is_inside_tree():
-		log_scroll.scroll_vertical = int(log_scroll.get_v_scroll_bar().max_value)
 
 
 func _start_next_round() -> void:
 	state = BattleState.PLAYER_TURN
 	player_dice_row.visible = false
 	crab_dice_row.visible = false
-	status_label.text = "Tap ROLL to begin"
+	turn_banner.text = "Tap ROLL to begin"
 	update_ui()
 
 
@@ -568,7 +633,7 @@ func _show_floating_damage(label: Label, amount: int) -> void:
 
 func show_victory() -> void:
 	state = BattleState.VICTORY
-	status_label.text = "Victory!"
+	turn_banner.text = "VICTORY!"
 	update_ui()
 
 	_award_victory_shells()
@@ -591,7 +656,7 @@ func _award_victory_shells() -> void:
 
 func show_defeat() -> void:
 	state = BattleState.DEFEAT
-	status_label.text = "Defeat..."
+	turn_banner.text = "DEFEAT..."
 	update_ui()
 	defeat_panel.visible = true
 
@@ -600,7 +665,7 @@ func show_defeat() -> void:
 ## player receives no victory reward, and the player simply returns home.
 func show_draw() -> void:
 	state = BattleState.DRAW
-	status_label.text = "Draw."
+	turn_banner.text = "DRAW."
 	update_ui()
 	draw_panel.visible = true
 

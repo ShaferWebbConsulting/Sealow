@@ -3,6 +3,7 @@ extends Control
 const PlayerDataScript = preload("res://scripts/player/player_data.gd")
 
 @onready var dive_button: Button = %DiveButton
+@onready var shop_button: Button = %ShopButton
 @onready var settings_button: Button = %SettingsButton
 @onready var settings_panel: Control = %SettingsPanel
 @onready var settings_back_button: Button = %SettingsBackButton
@@ -18,6 +19,7 @@ func _ready() -> void:
 		return
 
 	dive_button.pressed.connect(_on_dive_pressed)
+	shop_button.pressed.connect(_on_shop_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
 	settings_back_button.pressed.connect(_on_settings_back_pressed)
 	settings_panel.visible = false
@@ -46,6 +48,10 @@ func update_player_ui() -> void:
 
 func _on_dive_pressed() -> void:
 	SceneManager.go_to_battle()
+
+
+func _on_shop_pressed() -> void:
+	SceneManager.go_to_shop()
 
 
 func _on_settings_pressed() -> void:
