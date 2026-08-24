@@ -27,3 +27,20 @@ static func apply_damage_bonus(base_damage: int, is_armed: bool, bonus: int = TR
 ## should trigger (i.e. it was armed).
 static func resolve_defeat(is_armed: bool) -> bool:
 	return is_armed
+
+## Circle of Seaweed:
+## If available/armed when the player loses, allows the player to retry
+## the same battle from the beginning.
+##
+## This helper does NOT reset HP or restart the battle itself.
+## battle_manager.gd is responsible for:
+## - consuming the inventory item
+## - resetting player HP
+## - resetting enemy HP
+## - resetting the round
+## - clearing temporary battle state
+## - restarting the same opponent
+##
+## Returns true when the Seaweed Circle should trigger.
+static func resolve_retry(is_armed: bool) -> bool:
+	return is_armed

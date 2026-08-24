@@ -8,6 +8,7 @@ enum ItemId {
 	TURTLE_SHIELD,
 	TRIDENT,
 	MERMAID_SCALE,
+	SEAWEED_CIRCLE,
 }
 
 ## MVP shop pricing: every item costs exactly 1 shell.
@@ -35,6 +36,8 @@ static func id_to_key(item_id: int) -> String:
 			return "trident"
 		ItemId.MERMAID_SCALE:
 			return "mermaid_scale"
+		ItemId.SEAWEED_CIRCLE:
+			return "seaweed_circle"
 	return ""
 
 
@@ -46,6 +49,8 @@ static func key_to_id(key: String) -> int:
 			return ItemId.TRIDENT
 		"mermaid_scale":
 			return ItemId.MERMAID_SCALE
+		"seaweed_circle":
+			return ItemId.SEAWEED_CIRCLE
 	return -1
 
 
@@ -70,5 +75,11 @@ static func get_catalog() -> Array[ItemData]:
 			"Mermaid Scale",
 			"🧜",
 			"Restore 2 HP."
+		),
+		ItemData.new(
+			ItemId.SEAWEED_CIRCLE,
+			"Seaweed Circle",
+			"🌿",
+			"Roll again if you lose."
 		),
 	]

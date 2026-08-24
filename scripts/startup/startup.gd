@@ -18,10 +18,6 @@ extends Control
 
 
 func _ready() -> void:
-	print("NameEditPanel: ", name_edit_panel)
-	print("NameInput: ", name_input)
-	print("SaveNameButton: ", save_name_button)
-	print("CancelNameButton: ", cancel_name_button)
 	continue_button.pressed.connect(_on_continue_pressed)
 	new_dive_button.pressed.connect(_on_new_dive_pressed)
 	confirm_cancel_button.pressed.connect(_on_confirm_cancel_pressed)

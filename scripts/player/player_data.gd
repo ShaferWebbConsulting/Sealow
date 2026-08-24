@@ -16,6 +16,7 @@ const DEFAULT_SAVE: Dictionary = {
 		"turtle_shield": 1,
 		"trident": 1,
 		"mermaid_scale": 1,
+		"seaweed_circle": 1,
 	},
 }
 
