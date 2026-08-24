@@ -1,7 +1,9 @@
-[gd_scene load_steps=10 format=3 uid="uid://ce4l53xn63f65"]
+[gd_scene load_steps=13 format=3 uid="uid://ce4l53xn63f65"]
 
 [ext_resource type="Script" path="res://scripts/battle/battle_manager.gd" id="1_sm8f8"]
 [ext_resource type="Theme" uid="uid://b6q1s0p8m2w3x" path="res://assets/theme/sealow_theme.tres" id="2_theme"]
+[ext_resource type="PackedScene" path="res://scenes/ui/Dice.tscn" id="3_dice"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ItemPopup.tscn" id="4_itempopup"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_seafloor"]
 bg_color = Color(0.0196078, 0.0588235, 0.0941176, 1)
@@ -55,6 +57,13 @@ content_margin_left = 16.0
 content_margin_top = 12.0
 content_margin_right = 16.0
 content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_playertint"]
+bg_color = Color(1, 1, 1, 0.08)
+corner_radius_top_left = 400
+corner_radius_top_right = 400
+corner_radius_bottom_right = 400
+corner_radius_bottom_left = 400
 
 [node name="Battle" type="Control"]
 layout_mode = 3
@@ -146,10 +155,10 @@ theme_override_constants/margin_bottom = 40
 
 [node name="MainVBox" type="VBoxContainer" parent="SafeArea"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 16
 
 [node name="Battlefield" type="Control" parent="SafeArea/MainVBox"]
-custom_minimum_size = Vector2(0, 420)
+custom_minimum_size = Vector2(0, 340)
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -157,7 +166,7 @@ size_flags_vertical = 3
 layout_mode = 1
 anchors_preset = 0
 anchor_right = 0.6
-anchor_bottom = 0.24
+anchor_bottom = 0.28
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
 [node name="VBox" type="VBoxContainer" parent="SafeArea/MainVBox/Battlefield/EnemyCard"]
@@ -168,6 +177,7 @@ theme_override_constants/separation = 6
 layout_mode = 2
 
 [node name="EnemyName" type="Label" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox/NameRow"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 26
@@ -201,7 +211,7 @@ anchors_preset = 0
 anchor_left = 0.55
 anchor_right = 1.0
 anchor_bottom = 0.52
-theme_override_font_sizes/font_size = 128
+theme_override_font_sizes/font_size = 112
 text = "🦀"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -219,14 +229,25 @@ text = "-0"
 horizontal_alignment = 1
 visible = false
 
+[node name="PlayerBodyTint" type="Panel" parent="SafeArea/MainVBox/Battlefield"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.46
+anchor_top = 0.38
+anchor_right = 0.94
+anchor_bottom = 0.78
+theme_override_styles/panel = SubResource("StyleBoxFlat_playertint")
+
 [node name="PlayerSprite" type="Label" parent="SafeArea/MainVBox/Battlefield"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 0
 anchor_left = 0.42
 anchor_top = 0.34
 anchor_right = 1.0
 anchor_bottom = 0.82
-theme_override_font_sizes/font_size = 144
+theme_override_font_sizes/font_size = 128
 text = "🐙"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -262,6 +283,7 @@ theme_override_constants/separation = 6
 layout_mode = 2
 
 [node name="OctoName" type="Label" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox/NameRow"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 26
@@ -305,82 +327,63 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="MessageLabel" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
+[node name="StatusLabel" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
 unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Tap ROLL to begin"
+autowrap_mode = 2
+horizontal_alignment = 1
+
+[node name="PlayerDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+visible = false
+
+[node name="PlayerDie1" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/PlayerDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PlayerDie2" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/PlayerDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PlayerDie3" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/PlayerDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="EnemyDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+visible = false
+
+[node name="EnemyDie1" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/EnemyDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="EnemyDie2" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/EnemyDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="EnemyDie3" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/EnemyDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="LogScroll" type="ScrollContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 130)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 22
-text = "What will Octo do?"
-autowrap_mode = 2
-vertical_alignment = 1
 
-[node name="OctoDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
+[node name="LogList" type="VBoxContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/LogScroll"]
 unique_name_in_owner = true
 layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 14
-visible = false
-
-[node name="OctoDie1" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/OctoDiceRow"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "⚀"
-
-[node name="OctoDie2" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/OctoDiceRow"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "⚀"
-
-[node name="OctoDie3" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/OctoDiceRow"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "⚀"
-
-[node name="OctoHandLabel" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 22
-text = ""
-horizontal_alignment = 1
-visible = false
-
-[node name="CrabDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 14
-visible = false
-
-[node name="CrabDie1" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/CrabDiceRow"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "⚀"
-
-[node name="CrabDie2" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/CrabDiceRow"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "⚀"
-
-[node name="CrabDie3" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox/CrabDiceRow"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "⚀"
-
-[node name="CrabHandLabel" type="Label" parent="SafeArea/MainVBox/BottomRow/MessagePanel/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 22
-text = ""
-horizontal_alignment = 1
-visible = false
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
 
 [node name="ActionMenu" type="VBoxContainer" parent="SafeArea/MainVBox/BottomRow"]
 custom_minimum_size = Vector2(168, 0)
@@ -395,15 +398,13 @@ size_flags_vertical = 3
 theme_override_font_sizes/font_size = 26
 text = "ROLL"
 
-[node name="BetButton" type="Button" parent="SafeArea/MainVBox/BottomRow/ActionMenu"]
+[node name="ItemButton" type="Button" parent="SafeArea/MainVBox/BottomRow/ActionMenu"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 size_flags_vertical = 3
-disabled = true
-theme_override_font_sizes/font_size = 18
-text = "BET
-Coming Soon"
+theme_override_font_sizes/font_size = 20
+text = "ITEM"
 
 [node name="RunButton" type="Button" parent="SafeArea/MainVBox/BottomRow/ActionMenu"]
 unique_name_in_owner = true
@@ -530,6 +531,7 @@ horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="Subtitle" type="Label" parent="DefeatPanel/Center/Panel/VBox"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 24
@@ -545,6 +547,64 @@ theme_override_font_sizes/font_size = 24
 text = "TRY AGAIN"
 
 [node name="DefeatReturnButton" type="Button" parent="DefeatPanel/Center/Panel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "RETURN HOME"
+
+[node name="DrawPanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="DrawPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0117647, 0.0470588, 0.0784314, 0.85)
+
+[node name="Center" type="CenterContainer" parent="DrawPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="DrawPanel/Center"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="VBox" type="VBoxContainer" parent="DrawPanel/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="DrawPanel/Center/Panel/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 32
+text = "🐢 TURTLE SHIELD SAVED YOU!"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Subtitle" type="Label" parent="DrawPanel/Center/Panel/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 40
+text = "DRAW"
+horizontal_alignment = 1
+
+[node name="DrawReturnButton" type="Button" parent="DrawPanel/Center/Panel/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
@@ -684,7 +744,13 @@ beats
 Weakest hand.
 
 Whoever rolls the stronger hand wins the round and
-deals damage. No-point rolls automatically reroll."
+deals damage. No-point rolls automatically reroll.
+
+🎒 ITEMS
+Use one item per battle from the ITEM menu:
+🐢 Turtle Shield — turns a defeat into a draw.
+🔱 Trident — +2 damage on your next hit.
+🧜 Mermaid Scale — restore 2 HP."
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -695,3 +761,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "← BACK"
+
+[node name="ItemPopup" parent="." instance=ExtResource("4_itempopup")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
