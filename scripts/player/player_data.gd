@@ -28,6 +28,9 @@ const CHARACTER_TYPES: Dictionary = {
 	"crab": {"emoji": "🦀", "display_name": "Little Crab"},
 	"shrimp": {"emoji": "🦐", "display_name": "Little Shrimp"},
 	"fish": {"emoji": "🐟", "display_name": "Little Fish"},
+	"SeaSnake": {"emoji": "🐍", "display_name": "Snake coming soon..."},
+	#TODO IMPLEMENT SNAKE
+
 }
 
 ## Ordered list of selectable creature keys (drives Character Select layout).

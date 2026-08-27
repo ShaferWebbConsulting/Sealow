@@ -62,10 +62,10 @@ static func evaluate_hand(dice: Array[int]) -> DiceHand:
 	sorted_dice.sort()
 
 	if sorted_dice == [4, 5, 6]:
-		return DiceHand.new(HandType.TIDAL_ROLL, 7, sorted_dice, "TIDAL ROLL")
+		return DiceHand.new(HandType.TIDAL_ROLL, 7, sorted_dice, "TIDAL WAVE!")
 
 	if sorted_dice == [1, 2, 3]:
-		return DiceHand.new(HandType.WASHED_OUT, 0, sorted_dice, "WASHED OUT")
+		return DiceHand.new(HandType.WASHED_OUT, 0, sorted_dice, "WASHED OUT!")
 
 	if sorted_dice[0] == sorted_dice[1] and sorted_dice[1] == sorted_dice[2]:
 		var triple_value: int = sorted_dice[0]
@@ -139,7 +139,12 @@ static func result_label(winner_hand: DiceHand, loser_hand: DiceHand) -> String:
 	if loser_hand.hand_type == HandType.WASHED_OUT:
 		return "WASHED OUT"
 	if winner_hand.hand_type == HandType.TRIPLE:
-		return "TRIPLES"
+		return "TRIPLES" # TODO add what you got here.
 	if winner_hand.hand_type == HandType.POINT:
-		return "POINT %d" % winner_hand.pair_value
+		return "TWO PAIR %d:%d beating %d:%d" % [
+			winner_hand.pair_value,
+			winner_hand.point_value,
+			loser_hand.pair_value,
+			loser_hand.point_value
+		]
 	return winner_hand.display_name

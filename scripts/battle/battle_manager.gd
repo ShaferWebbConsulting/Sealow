@@ -508,7 +508,7 @@ func perform_round() -> void:
 	if exiting_scene or not is_inside_tree():
 		return
 
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(0.5).timeout
 
 	if exiting_scene or not is_inside_tree():
 		return
@@ -534,7 +534,7 @@ func perform_round() -> void:
 
 	update_ui()
 
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(.5).timeout
 
 	if exiting_scene or not is_inside_tree():
 		return
@@ -749,7 +749,7 @@ func _resolve_round(
 	)
 
 	await get_tree().create_timer(
-		0.5
+		0.8
 	).timeout
 
 	if exiting_scene or not is_inside_tree():
@@ -812,7 +812,7 @@ func _resolve_round(
 
 
 	await get_tree().create_timer(
-		0.7
+		5
 	).timeout
 
 	if exiting_scene or not is_inside_tree():
@@ -1041,7 +1041,7 @@ func _render_log_entry(
 
 	if entry["is_tie"]:
 		label.text = (
-			"R%d  🤝 TIE · Roll again"
+			"R%d: 🤝 TIE · Roll again"
 			% entry["round"]
 		)
 
@@ -1069,7 +1069,7 @@ func _render_log_entry(
 		)
 
 		label.text = (
-			"R%d  %s %s%s   %s -%d HP"
+			"R%d: %s won with %s%s   %s -%d HP"
 			% [
 				entry["round"],
 				winner_emoji,
