@@ -141,7 +141,7 @@ static func result_label(winner_hand: DiceHand, loser_hand: DiceHand) -> String:
 	if winner_hand.hand_type == HandType.TRIPLE:
 		return "TRIPLES" # TODO add what you got here.
 	if winner_hand.hand_type == HandType.POINT:
-		return "TWO PAIR %d:%d beating %d:%d" % [
+		return "TWO PAIR (%d:%d beating %d:%d)" % [
 			winner_hand.pair_value,
 			winner_hand.point_value,
 			loser_hand.pair_value,
