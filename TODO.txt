@@ -18,3 +18,32 @@ Player loses
 consume effect
 ↓
 restart same battle automatically
+
+
+
+----------------------------------------------- TO DEPLOY--------------------------------------------------
+Godot game finished
+      ↓
+Install export templates
+      ↓
+Add iOS export preset
+      ↓
+Export Xcode project
+      ↓
+Open in Xcode
+      ↓
+Configure signing
+      ↓
+Run on your iPhone
+      ↓
+Apple Developer account
+      ↓
+Create App Store Connect app
+      ↓
+Archive
+      ↓
+Upload
+      ↓
+TestFlight
+      ↓
+Invite wife
