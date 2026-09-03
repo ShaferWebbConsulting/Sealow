@@ -1,0 +1,28 @@
+name: Build SeaLow iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Godot
+        run: |
+          brew install --cask godot
+
+      - name: Import project
+        run: |
+          godot --headless --path . --import
+
+      - name: Export iOS project
+        run: |
+          mkdir -p build/ios
+          godot --headless \
+            --path . \
+            --export-release "iOS" \
+            build/ios/SeaLow.zip
