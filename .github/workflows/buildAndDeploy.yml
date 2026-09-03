@@ -5,15 +5,46 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-latest
+    runs-on: macos-26
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Godot
         run: |
           brew install --cask godot
+          godot --version
+
+      - name: Install Godot export templates
+        run: |
+          GODOT_VERSION="4.7.1"
+
+          curl -L \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" \
+            -o /tmp/godot_templates.tpz
+
+          mkdir -p /tmp/godot_templates
+          unzip -q /tmp/godot_templates.tpz -d /tmp/godot_templates
+
+          TEMPLATE_DIR="$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.stable"
+
+          mkdir -p "$TEMPLATE_DIR"
+
+          cp -R /tmp/godot_templates/templates/* "$TEMPLATE_DIR/"
+
+          echo "Installed templates:"
+          ls -lah "$TEMPLATE_DIR"
+
+          test -f "$TEMPLATE_DIR/ios.zip"
+
+      - name: Verify export preset
+        run: |
+          test -f export_presets.cfg
+          grep 'name="iOS"' export_presets.cfg
+          grep 'export_filter=' export_presets.cfg
+          grep 'include_filter=' export_presets.cfg
+          grep 'exclude_filter=' export_presets.cfg
 
       - name: Import project
         run: |
@@ -22,7 +53,18 @@ jobs:
       - name: Export iOS project
         run: |
           mkdir -p build/ios
+
           godot --headless \
             --path . \
             --export-release "iOS" \
             build/ios/SeaLow.zip
+
+      - name: Show exported files
+        run: |
+          ls -lah build/ios
+
+      - name: Upload iOS export
+        uses: actions/upload-artifact@v6
+        with:
+          name: SeaLow-iOS-Xcode
+          path: build/ios/SeaLow.zip
