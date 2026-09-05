@@ -22,6 +22,8 @@ jobs:
       - name: Install Godot
         id: godot
         run: |
+          set -euo pipefail
+
           brew install --cask godot
 
           FULL_VERSION="$(godot --version)"
@@ -75,17 +77,69 @@ jobs:
           echo "iOS template found:"
           ls -lh "$TEMPLATE_DIR/ios.zip"
 
-      - name: Verify export preset
+      - name: Verify and sanitize export preset
         run: |
+          set -euo pipefail
+
           test -f export_presets.cfg
-          grep 'name="iOS"' export_presets.cfg
-          grep 'export_filter=' export_presets.cfg
-          grep 'include_filter=' export_presets.cfg
-          grep 'exclude_filter=' export_presets.cfg
-          grep 'application/export_project_only=true' export_presets.cfg
+
+          echo "=== Current iOS export settings ==="
+
+          grep -n 'name="iOS"' export_presets.cfg
+          grep -n 'export_filter=' export_presets.cfg
+          grep -n 'include_filter=' export_presets.cfg
+          grep -n 'exclude_filter=' export_presets.cfg
+          grep -n 'application/export_project_only' export_presets.cfg || true
+          grep -n 'application/code_sign_identity' export_presets.cfg || true
+          grep -n 'application/provisioning_profile' export_presets.cfg || true
+
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path("export_presets.cfg")
+          text = path.read_text()
+
+          replacements = {
+              'application/export_project_only=false':
+                  'application/export_project_only=true',
+
+              'application/code_sign_identity_debug="Apple Development"':
+                  'application/code_sign_identity_debug=""',
+
+              'application/code_sign_identity_release="Apple Distribution"':
+                  'application/code_sign_identity_release=""',
+          }
+
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+
+          path.write_text(text)
+
+          print("\n=== Sanitized export settings ===")
+          for line in text.splitlines():
+              if (
+                  "export_project_only" in line
+                  or "code_sign_identity" in line
+                  or "provisioning_profile" in line
+              ):
+                  print(line)
+          PY
+
+          grep -q '^application/export_project_only=true$' export_presets.cfg || {
+            echo "::error::application/export_project_only must be true"
+            exit 1
+          }
+
+          if grep -q 'application/code_sign_identity_release="Apple Distribution"' export_presets.cfg; then
+            echo "::error::Godot preset must not contain Apple Distribution"
+            exit 1
+          fi
+
+          echo "Godot preset is configured for project-only export."
 
       - name: Import Godot project
         run: |
+          set -euo pipefail
           godot --headless --path . --import
 
       - name: Export Xcode project from Godot
@@ -107,8 +161,18 @@ jobs:
             -d build/xcode
 
           echo "Generated Xcode project(s):"
+
           find build/xcode \
             -maxdepth 3 \
             -type d \
             -name "*.xcodeproj" \
             -print
+
+          XCODEPROJ="$(find build/xcode -name "*.xcodeproj" -print -quit)"
+
+          if [ -z "$XCODEPROJ" ]; then
+            echo "::error::No Xcode project was generated"
+            exit 1
+          fi
+
+          echo "Godot Xcode project export completed successfully."
