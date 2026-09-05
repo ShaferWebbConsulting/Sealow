@@ -140,39 +140,43 @@ jobs:
       - name: Import Godot project
         run: |
           set -euo pipefail
-          godot --headless --path . --import
+
+          godot --headless \
+            --path . \
+            --import
 
       - name: Export Xcode project from Godot
         run: |
           set -euo pipefail
 
-          rm -rf build/ios build/xcode
-          mkdir -p build/ios build/xcode
+          rm -rf build/ios
+          mkdir -p build/ios
+
+          echo "Exporting Godot project directly to Xcode project..."
 
           godot --headless \
             --path . \
             --export-release "iOS" \
-            build/ios/SeaLow.zip
+            build/ios/SeaLow.xcodeproj
 
-          test -f build/ios/SeaLow.zip
-
-          unzip -q \
-            build/ios/SeaLow.zip \
-            -d build/xcode
-
-          echo "Generated Xcode project(s):"
-
-          find build/xcode \
+          echo "=== Generated iOS files ==="
+          find build/ios \
             -maxdepth 3 \
-            -type d \
-            -name "*.xcodeproj" \
             -print
 
-          XCODEPROJ="$(find build/xcode -name "*.xcodeproj" -print -quit)"
-
-          if [ -z "$XCODEPROJ" ]; then
-            echo "::error::No Xcode project was generated"
+          if [ ! -d "build/ios/SeaLow.xcodeproj" ]; then
+            echo "::error::SeaLow.xcodeproj was not generated"
             exit 1
           fi
+
+          echo "SeaLow.xcodeproj generated successfully."
+
+          echo "=== Xcode project contents ==="
+          ls -lah build/ios/SeaLow.xcodeproj
+
+          echo "=== Xcode schemes ==="
+          xcodebuild \
+            -project build/ios/SeaLow.xcodeproj \
+            -list
 
           echo "Godot Xcode project export completed successfully."
