@@ -16,12 +16,16 @@ jobs:
     runs-on: macos-26
 
     steps:
+      # ============================================================
+      # CHECKOUT
+      # ============================================================
+
       - name: Checkout
         uses: actions/checkout@v6
 
-      # ------------------------------------------------------------
+      # ============================================================
       # GODOT
-      # ------------------------------------------------------------
+      # ============================================================
 
       - name: Install Godot
         id: godot
@@ -34,7 +38,12 @@ jobs:
           GODOT_VERSION="$(echo "$FULL_VERSION" | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
 
           echo "Installed Godot: $FULL_VERSION"
-          echo "Detected version: $GODOT_VERSION"
+          echo "Detected Godot version: $GODOT_VERSION"
+
+          if [ -z "$GODOT_VERSION" ]; then
+            echo "::error::Could not determine Godot version"
+            exit 1
+          fi
 
           echo "version=$GODOT_VERSION" >> "$GITHUB_OUTPUT"
 
@@ -44,17 +53,17 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Installing export templates for Godot ${GODOT_VERSION}"
-
           TEMPLATE_URL="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
 
-          echo "Downloading:"
+          echo "Installing templates for Godot ${GODOT_VERSION}"
+          echo "Template URL:"
           echo "$TEMPLATE_URL"
 
           curl \
             --fail \
             --location \
             --retry 3 \
+            --retry-delay 2 \
             "$TEMPLATE_URL" \
             -o /tmp/godot_templates.tpz
 
@@ -73,51 +82,187 @@ jobs:
             /tmp/godot_templates/templates/* \
             "$TEMPLATE_DIR/"
 
-          echo "Installed templates:"
+          echo "Installed export templates:"
           ls -lah "$TEMPLATE_DIR"
 
-          echo "Checking iOS template:"
-          test -f "$TEMPLATE_DIR/ios.zip"
+          if [ ! -f "$TEMPLATE_DIR/ios.zip" ]; then
+            echo "::error::Missing iOS template: $TEMPLATE_DIR/ios.zip"
+            exit 1
+          fi
 
-          echo "iOS template found:"
+          echo "iOS export template found:"
           ls -lh "$TEMPLATE_DIR/ios.zip"
 
-      # ------------------------------------------------------------
-      # APPLE SIGNING
+      # ============================================================
+      # CHECK SECRETS EXIST
       #
-      # Required GitHub Secrets:
-      #
-      # IOS_CERTIFICATE_BASE64
-      # IOS_CERTIFICATE_PASSWORD
-      # IOS_PROVISIONING_PROFILE_BASE64
-      # ------------------------------------------------------------
+      # We DO NOT print any secret values here.
+      # ============================================================
 
-      - name: Install Apple Distribution certificate
+      - name: Validate signing secrets exist
+        env:
+          IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          set -euo pipefail
+
+          echo "Checking required GitHub Secrets..."
+
+          if [ -z "${IOS_CERTIFICATE_BASE64:-}" ]; then
+            echo "::error::IOS_CERTIFICATE_BASE64 is missing or empty"
+            exit 1
+          fi
+
+          if [ -z "${IOS_CERTIFICATE_PASSWORD:-}" ]; then
+            echo "::error::IOS_CERTIFICATE_PASSWORD is missing or empty"
+            exit 1
+          fi
+
+          if [ -z "${IOS_PROVISIONING_PROFILE_BASE64:-}" ]; then
+            echo "::error::IOS_PROVISIONING_PROFILE_BASE64 is missing or empty"
+            exit 1
+          fi
+
+          echo "IOS_CERTIFICATE_BASE64: present"
+          echo "IOS_CERTIFICATE_PASSWORD: present"
+          echo "IOS_PROVISIONING_PROFILE_BASE64: present"
+
+          echo "Certificate secret character count:"
+          echo "${#IOS_CERTIFICATE_BASE64}"
+
+          echo "Provisioning profile secret character count:"
+          echo "${#IOS_PROVISIONING_PROFILE_BASE64}"
+
+      # ============================================================
+      # DECODE + VALIDATE APPLE DISTRIBUTION CERTIFICATE
+      # ============================================================
+
+      - name: Decode and validate Apple Distribution certificate
         env:
           IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
           IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
         run: |
           set -euo pipefail
 
-          if [ -z "${IOS_CERTIFICATE_BASE64:-}" ]; then
-            echo "::error::Missing IOS_CERTIFICATE_BASE64 secret"
+          CERTIFICATE_PATH="$RUNNER_TEMP/sealow_distribution.p12"
+
+          python3 <<'PY'
+          import os
+          import re
+          import base64
+          import hashlib
+          from pathlib import Path
+
+          raw = os.environ.get("IOS_CERTIFICATE_BASE64", "")
+
+          print("=== Certificate Base64 diagnostics ===")
+          print(f"Raw secret characters: {len(raw)}")
+
+          if not raw:
+              raise SystemExit(
+                  "ERROR: IOS_CERTIFICATE_BASE64 is empty"
+              )
+
+          # Remove accidental surrounding quotation marks.
+          if (
+              len(raw) >= 2
+              and raw[0] == raw[-1]
+              and raw[0] in ("'", '"')
+          ):
+              print("Removing accidental surrounding quotes.")
+              raw = raw[1:-1]
+
+          # GitHub/browser copy-paste may introduce visual or real
+          # whitespace/newlines. Base64 does not need them.
+          cleaned = re.sub(r"\s+", "", raw)
+
+          print(f"Characters after whitespace removal: {len(cleaned)}")
+
+          if "BEGIN CERTIFICATE" in cleaned:
+              raise SystemExit(
+                  "ERROR: This appears to be PEM certificate text, "
+                  "not Base64 of a .p12 file."
+              )
+
+          # Repair missing trailing Base64 padding if necessary.
+          remainder = len(cleaned) % 4
+
+          if remainder:
+              print(
+                  f"Base64 length remainder: {remainder}. "
+                  "Adding trailing padding."
+              )
+
+              cleaned += "=" * (4 - remainder)
+
+          try:
+              decoded = base64.b64decode(
+                  cleaned,
+                  validate=True
+              )
+          except Exception as exc:
+              raise SystemExit(
+                  f"ERROR: IOS_CERTIFICATE_BASE64 is invalid Base64: {exc}"
+              )
+
+          if len(decoded) < 500:
+              raise SystemExit(
+                  f"ERROR: Decoded .p12 is suspiciously small: "
+                  f"{len(decoded)} bytes"
+              )
+
+          destination = (
+              Path(os.environ["RUNNER_TEMP"])
+              / "sealow_distribution.p12"
+          )
+
+          destination.write_bytes(decoded)
+
+          print(f"Decoded P12 bytes: {len(decoded)}")
+          print(
+              "Decoded P12 SHA256: "
+              + hashlib.sha256(decoded).hexdigest()
+          )
+          print(f"Certificate written to: {destination}")
+          PY
+
+          echo ""
+          echo "Decoded certificate file:"
+          ls -lh "$CERTIFICATE_PATH"
+
+          echo ""
+          echo "Validating PKCS#12 structure and password..."
+
+          if ! openssl pkcs12 \
+            -in "$CERTIFICATE_PATH" \
+            -passin env:IOS_CERTIFICATE_PASSWORD \
+            -info \
+            -noout; then
+
+            echo "::error::The decoded file is not a valid P12 OR IOS_CERTIFICATE_PASSWORD is incorrect."
             exit 1
           fi
 
-          if [ -z "${IOS_CERTIFICATE_PASSWORD:-}" ]; then
-            echo "::error::Missing IOS_CERTIFICATE_PASSWORD secret"
-            exit 1
-          fi
+          echo ""
+          echo "PKCS#12 validation succeeded."
+
+      # ============================================================
+      # INSTALL APPLE DISTRIBUTION CERTIFICATE
+      # ============================================================
+
+      - name: Install Apple Distribution certificate
+        env:
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
 
           CERTIFICATE_PATH="$RUNNER_TEMP/sealow_distribution.p12"
+
           KEYCHAIN_PATH="$RUNNER_TEMP/sealow-signing.keychain-db"
           KEYCHAIN_PASSWORD="$(openssl rand -hex 32)"
 
-          echo "$IOS_CERTIFICATE_BASE64" \
-            | base64 --decode \
-            > "$CERTIFICATE_PATH"
-
-          echo "Creating temporary CI keychain..."
+          echo "Creating temporary signing keychain..."
 
           security create-keychain \
             -p "$KEYCHAIN_PASSWORD" \
@@ -131,14 +276,12 @@ jobs:
             -p "$KEYCHAIN_PASSWORD" \
             "$KEYCHAIN_PATH"
 
-          echo "Importing Apple Distribution certificate..."
+          echo "Importing P12..."
 
           security import "$CERTIFICATE_PATH" \
+            -k "$KEYCHAIN_PATH" \
             -P "$IOS_CERTIFICATE_PASSWORD" \
-            -A \
-            -t cert \
-            -f pkcs12 \
-            -k "$KEYCHAIN_PATH"
+            -A
 
           security set-key-partition-list \
             -S apple-tool:,apple:,codesign: \
@@ -154,51 +297,155 @@ jobs:
             -d user \
             -s "$KEYCHAIN_PATH"
 
-          echo "=== Available signing identities ==="
+          echo ""
+          echo "=== Available code-signing identities ==="
 
           security find-identity \
             -v \
             -p codesigning \
             "$KEYCHAIN_PATH"
 
-          if ! security find-identity \
-            -v \
-            -p codesigning \
-            "$KEYCHAIN_PATH" \
-            | grep -q "Apple Distribution"; then
+          SIGNING_COUNT="$(
+            security find-identity \
+              -v \
+              -p codesigning \
+              "$KEYCHAIN_PATH" \
+              | grep -c "Apple Distribution" \
+              || true
+          )"
 
-            echo "::error::Apple Distribution identity was not found after importing the certificate"
+          echo ""
+          echo "Apple Distribution identity count: $SIGNING_COUNT"
+
+          if [ "$SIGNING_COUNT" -lt 1 ]; then
+            echo "::error::No Apple Distribution identity was found."
+            echo "::error::Your P12 must contain BOTH the Apple Distribution certificate AND its matching private key."
             exit 1
           fi
+
+          echo ""
+          echo "Apple Distribution certificate installed successfully."
 
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
           echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
 
-      - name: Install App Store provisioning profile
-        id: profile
+      # ============================================================
+      # DECODE PROVISIONING PROFILE
+      # ============================================================
+
+      - name: Decode provisioning profile
         env:
           IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
         run: |
           set -euo pipefail
 
-          if [ -z "${IOS_PROVISIONING_PROFILE_BASE64:-}" ]; then
-            echo "::error::Missing IOS_PROVISIONING_PROFILE_BASE64 secret"
-            exit 1
-          fi
+          python3 <<'PY'
+          import os
+          import re
+          import base64
+          import hashlib
+          from pathlib import Path
+
+          raw = os.environ.get(
+              "IOS_PROVISIONING_PROFILE_BASE64",
+              ""
+          )
+
+          print("=== Provisioning profile Base64 diagnostics ===")
+          print(f"Raw secret characters: {len(raw)}")
+
+          if not raw:
+              raise SystemExit(
+                  "ERROR: IOS_PROVISIONING_PROFILE_BASE64 is empty"
+              )
+
+          if (
+              len(raw) >= 2
+              and raw[0] == raw[-1]
+              and raw[0] in ("'", '"')
+          ):
+              print("Removing accidental surrounding quotes.")
+              raw = raw[1:-1]
+
+          # Remove spaces, CR, LF and tabs.
+          cleaned = re.sub(r"\s+", "", raw)
+
+          print(
+              "Characters after whitespace removal: "
+              f"{len(cleaned)}"
+          )
+
+          remainder = len(cleaned) % 4
+
+          if remainder:
+              print(
+                  f"Adding {4 - remainder} Base64 padding characters."
+              )
+
+              cleaned += "=" * (4 - remainder)
+
+          try:
+              decoded = base64.b64decode(
+                  cleaned,
+                  validate=True
+              )
+          except Exception as exc:
+              raise SystemExit(
+                  "ERROR: Provisioning profile secret "
+                  f"is invalid Base64: {exc}"
+              )
+
+          if len(decoded) < 500:
+              raise SystemExit(
+                  "ERROR: Provisioning profile is "
+                  f"suspiciously small: {len(decoded)} bytes"
+              )
+
+          destination = (
+              Path(os.environ["RUNNER_TEMP"])
+              / "SeaLow.mobileprovision"
+          )
+
+          destination.write_bytes(decoded)
+
+          print(
+              f"Decoded profile bytes: {len(decoded)}"
+          )
+
+          print(
+              "Profile SHA256: "
+              + hashlib.sha256(decoded).hexdigest()
+          )
+
+          print(f"Written to: {destination}")
+          PY
+
+          echo ""
+          echo "Decoded provisioning profile:"
+          ls -lh "$RUNNER_TEMP/SeaLow.mobileprovision"
+
+      # ============================================================
+      # INSPECT + INSTALL PROVISIONING PROFILE
+      # ============================================================
+
+      - name: Validate and install provisioning profile
+        id: profile
+        run: |
+          set -euo pipefail
 
           PROFILE_PATH="$RUNNER_TEMP/SeaLow.mobileprovision"
           PROFILE_PLIST="$RUNNER_TEMP/SeaLow-profile.plist"
 
-          echo "$IOS_PROVISIONING_PROFILE_BASE64" \
-            | base64 --decode \
-            > "$PROFILE_PATH"
+          echo "Decoding Apple provisioning profile CMS payload..."
 
-          echo "Decoding provisioning profile..."
-
-          security cms \
+          if ! security cms \
             -D \
             -i "$PROFILE_PATH" \
-            > "$PROFILE_PLIST"
+            > "$PROFILE_PLIST"; then
+
+            echo "::error::The decoded file is not a valid Apple provisioning profile."
+            exit 1
+          fi
 
           PROFILE_UUID="$(
             /usr/libexec/PlistBuddy \
@@ -224,42 +471,55 @@ jobs:
               "$PROFILE_PLIST"
           )"
 
-          echo "Provisioning profile:"
-          echo "  Name: $PROFILE_NAME"
-          echo "  UUID: $PROFILE_UUID"
-          echo "  Team: $PROFILE_TEAM_ID"
-          echo "  App Identifier: $PROFILE_APP_IDENTIFIER"
+          PROFILE_EXPIRATION="$(
+            /usr/libexec/PlistBuddy \
+              -c "Print :ExpirationDate" \
+              "$PROFILE_PLIST"
+          )"
+
+          echo ""
+          echo "=== Provisioning profile ==="
+          echo "Name: $PROFILE_NAME"
+          echo "UUID: $PROFILE_UUID"
+          echo "Team ID: $PROFILE_TEAM_ID"
+          echo "App Identifier: $PROFILE_APP_IDENTIFIER"
+          echo "Expiration: $PROFILE_EXPIRATION"
 
           if [ "$PROFILE_TEAM_ID" != "$APPLE_TEAM_ID" ]; then
-            echo "::error::Provisioning profile Team ID does not match APPLE_TEAM_ID"
+            echo "::error::Provisioning profile Team ID '$PROFILE_TEAM_ID' does not match '$APPLE_TEAM_ID'."
             exit 1
           fi
 
-          EXPECTED_IDENTIFIER="${APPLE_TEAM_ID}.${BUNDLE_ID}"
+          EXPECTED_APP_IDENTIFIER="${APPLE_TEAM_ID}.${BUNDLE_ID}"
 
-          if [ "$PROFILE_APP_IDENTIFIER" != "$EXPECTED_IDENTIFIER" ]; then
-            echo "::error::Provisioning profile is for '$PROFILE_APP_IDENTIFIER', expected '$EXPECTED_IDENTIFIER'"
+          if [ "$PROFILE_APP_IDENTIFIER" != "$EXPECTED_APP_IDENTIFIER" ]; then
+            echo "::error::Provisioning profile App ID does not match."
+            echo "::error::Found:    $PROFILE_APP_IDENTIFIER"
+            echo "::error::Expected: $EXPECTED_APP_IDENTIFIER"
             exit 1
           fi
 
-          mkdir -p \
-            "$HOME/Library/MobileDevice/Provisioning Profiles"
+          PROFILE_INSTALL_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
 
-          cp "$PROFILE_PATH" \
-            "$HOME/Library/MobileDevice/Provisioning Profiles/${PROFILE_UUID}.mobileprovision"
+          mkdir -p "$PROFILE_INSTALL_DIR"
 
+          cp \
+            "$PROFILE_PATH" \
+            "$PROFILE_INSTALL_DIR/${PROFILE_UUID}.mobileprovision"
+
+          echo ""
           echo "Installed provisioning profile:"
           ls -lh \
-            "$HOME/Library/MobileDevice/Provisioning Profiles/${PROFILE_UUID}.mobileprovision"
+            "$PROFILE_INSTALL_DIR/${PROFILE_UUID}.mobileprovision"
 
           echo "profile_uuid=$PROFILE_UUID" >> "$GITHUB_OUTPUT"
           echo "profile_name=$PROFILE_NAME" >> "$GITHUB_OUTPUT"
 
-      # ------------------------------------------------------------
-      # CONFIGURE GODOT FOR MANUAL APP STORE SIGNING
-      # ------------------------------------------------------------
+      # ============================================================
+      # CONFIGURE GODOT FOR MANUAL DISTRIBUTION SIGNING
+      # ============================================================
 
-      - name: Configure iOS export for Distribution signing
+      - name: Configure Godot iOS signing
         env:
           PROFILE_UUID: ${{ steps.profile.outputs.profile_uuid }}
           PROFILE_NAME: ${{ steps.profile.outputs.profile_name }}
@@ -274,102 +534,127 @@ jobs:
           from pathlib import Path
 
           path = Path("export_presets.cfg")
+
           text = path.read_text()
 
           profile_uuid = os.environ["PROFILE_UUID"]
           profile_name = os.environ["PROFILE_NAME"]
 
-          def set_value(text, key, value):
-              pattern = rf'^{re.escape(key)}=.*$'
-              replacement = f'{key}="{value}"'
+          def set_string(key, value):
+              global text
 
-              if re.search(pattern, text, flags=re.MULTILINE):
-                  return re.sub(
+              pattern = (
+                  r"^"
+                  + re.escape(key)
+                  + r"=.*$"
+              )
+
+              replacement = (
+                  key
+                  + '="'
+                  + value
+                  + '"'
+              )
+
+              if re.search(
+                  pattern,
+                  text,
+                  flags=re.MULTILINE
+              ):
+                  text = re.sub(
                       pattern,
                       replacement,
                       text,
                       flags=re.MULTILINE
                   )
+              else:
+                  text += "\n" + replacement + "\n"
 
-              return text + f'\n{replacement}\n'
+          def set_bool(key, value):
+              global text
 
-          def set_bool(text, key, value):
-              pattern = rf'^{re.escape(key)}=.*$'
-              replacement = f'{key}={str(value).lower()}'
+              pattern = (
+                  r"^"
+                  + re.escape(key)
+                  + r"=.*$"
+              )
 
-              if re.search(pattern, text, flags=re.MULTILINE):
-                  return re.sub(
+              replacement = (
+                  key
+                  + "="
+                  + ("true" if value else "false")
+              )
+
+              if re.search(
+                  pattern,
+                  text,
+                  flags=re.MULTILINE
+              ):
+                  text = re.sub(
                       pattern,
                       replacement,
                       text,
                       flags=re.MULTILINE
                   )
+              else:
+                  text += "\n" + replacement + "\n"
 
-              return text + f'\n{replacement}\n'
-
-          # Godot is performing the archive itself in this CI setup.
-          text = set_bool(
-              text,
+          # Godot is currently performing the Xcode archive itself.
+          set_bool(
               "application/export_project_only",
               False
           )
 
-          text = set_value(
-              text,
-              "application/code_sign_identity_release",
-              "Apple Distribution"
-          )
-
-          text = set_value(
-              text,
+          set_string(
               "application/code_sign_identity_debug",
               ""
           )
 
-          text = set_value(
-              text,
-              "application/provisioning_profile_uuid_release",
-              profile_uuid
+          set_string(
+              "application/code_sign_identity_release",
+              "Apple Distribution"
           )
 
-          text = set_value(
-              text,
-              "application/provisioning_profile_specifier_release",
-              profile_name
-          )
-
-          text = set_value(
-              text,
+          set_string(
               "application/provisioning_profile_uuid_debug",
               ""
           )
 
-          text = set_value(
-              text,
+          set_string(
+              "application/provisioning_profile_uuid_release",
+              profile_uuid
+          )
+
+          set_string(
               "application/provisioning_profile_specifier_debug",
               ""
           )
 
+          set_string(
+              "application/provisioning_profile_specifier_release",
+              profile_name
+          )
+
           path.write_text(text)
 
-          print("=== Final signing configuration ===")
+          print("=== Final Godot signing options ===")
+
+          wanted = (
+              "app_store_team_id",
+              "bundle_identifier",
+              "export_project_only",
+              "code_sign_identity",
+              "provisioning_profile",
+              "export_method",
+          )
 
           for line in text.splitlines():
-              if any(
-                  item in line
-                  for item in (
-                      "app_store_team_id",
-                      "bundle_identifier",
-                      "export_project_only",
-                      "code_sign_identity",
-                      "provisioning_profile"
-                  )
-              ):
+              if any(x in line for x in wanted):
                   print(line)
           PY
 
           echo ""
-          echo "=== Validating configuration ==="
+          echo "Validating patched export preset..."
 
           grep -q \
             '^application/export_project_only=false$' \
@@ -383,11 +668,16 @@ jobs:
             "^application/provisioning_profile_uuid_release=\"${PROFILE_UUID}\"$" \
             export_presets.cfg
 
-          echo "Distribution signing configuration is ready."
+          grep -q \
+            "^application/provisioning_profile_specifier_release=\"${PROFILE_NAME}\"$" \
+            export_presets.cfg
 
-      # ------------------------------------------------------------
-      # GODOT IMPORT
-      # ------------------------------------------------------------
+          echo ""
+          echo "Godot signing configuration looks correct."
+
+      # ============================================================
+      # IMPORT PROJECT
+      # ============================================================
 
       - name: Import Godot project
         run: |
@@ -397,23 +687,21 @@ jobs:
             --path . \
             --import
 
-      # ------------------------------------------------------------
-      # EXPORT / ARCHIVE / SIGN
-      #
-      # Godot is allowed to invoke xcodebuild here.
-      # ------------------------------------------------------------
+      # ============================================================
+      # BUILD SIGNED IPA
+      # ============================================================
 
       - name: Build signed iOS IPA
         env:
           PROFILE_UUID: ${{ steps.profile.outputs.profile_uuid }}
+          PROFILE_NAME: ${{ steps.profile.outputs.profile_name }}
 
-          # Godot 4.7 iOS override.
-          GODOT_IOS_PROVISIONING_PROFILE_UUID_RELEASE: ${{ steps.profile.outputs.profile_uuid }}
-
-          # Newer Apple embedded-platform exporter naming.
-          # Harmless if this Godot version ignores it.
+          # Current Godot Apple platform override names.
           GODOT_APPLE_PLATFORM_PROVISIONING_PROFILE_UUID_RELEASE: ${{ steps.profile.outputs.profile_uuid }}
+          GODOT_APPLE_PLATFORM_PROFILE_SPECIFIER_RELEASE: ${{ steps.profile.outputs.profile_name }}
 
+          # Older iOS-specific override kept for compatibility.
+          GODOT_IOS_PROVISIONING_PROFILE_UUID_RELEASE: ${{ steps.profile.outputs.profile_uuid }}
         run: |
           set -euo pipefail
 
@@ -421,24 +709,28 @@ jobs:
           mkdir -p build/ios
 
           echo "=========================================="
-          echo "Building SeaLow for App Store distribution"
+          echo "SeaLow iOS Distribution Build"
           echo "=========================================="
-
-          echo "Team ID:"
-          echo "$APPLE_TEAM_ID"
-
-          echo "Bundle ID:"
-          echo "$BUNDLE_ID"
-
-          echo "Provisioning UUID:"
-          echo "$PROFILE_UUID"
+          echo "Team ID: $APPLE_TEAM_ID"
+          echo "Bundle ID: $BUNDLE_ID"
+          echo "Profile name: $PROFILE_NAME"
+          echo "Profile UUID: $PROFILE_UUID"
 
           echo ""
-          echo "Available Apple Distribution identities:"
-          security find-identity -v -p codesigning
+          echo "=== Signing identities before build ==="
+
+          security find-identity \
+            -v \
+            -p codesigning
 
           echo ""
-          echo "Starting Godot release export..."
+          echo "=== Installed provisioning profiles ==="
+
+          ls -lah \
+            "$HOME/Library/MobileDevice/Provisioning Profiles"
+
+          echo ""
+          echo "Starting Godot iOS release export..."
 
           godot --headless \
             --path . \
@@ -446,7 +738,7 @@ jobs:
             build/ios/SeaLow.ipa
 
           echo ""
-          echo "=== Generated files ==="
+          echo "=== Generated build files ==="
 
           find build/ios \
             -maxdepth 3 \
@@ -461,18 +753,19 @@ jobs:
           )"
 
           if [ -z "$IPA_PATH" ]; then
-            echo "::error::Godot/Xcode completed without producing an IPA"
+            echo "::error::No IPA was produced"
             exit 1
           fi
 
           echo ""
-          echo "SUCCESS"
-          echo "Signed IPA:"
-          echo "$IPA_PATH"
+          echo "=========================================="
+          echo "BUILD SUCCESSFUL"
+          echo "=========================================="
+          echo "IPA: $IPA_PATH"
 
-      # ------------------------------------------------------------
+      # ============================================================
       # ARTIFACTS
-      # ------------------------------------------------------------
+      # ============================================================
 
       - name: Upload signed IPA
         uses: actions/upload-artifact@v6
@@ -481,7 +774,7 @@ jobs:
           path: build/ios/*.ipa
           if-no-files-found: error
 
-      - name: Upload Xcode archive
+      - name: Upload Xcode build files
         if: always()
         uses: actions/upload-artifact@v6
         with:
@@ -491,15 +784,17 @@ jobs:
             build/ios/*.xcodeproj
           if-no-files-found: ignore
 
-      # ------------------------------------------------------------
+      # ============================================================
       # CLEANUP
-      # ------------------------------------------------------------
+      # ============================================================
 
-      - name: Clean signing assets
+      - name: Clean temporary signing assets
         if: always()
         run: |
+          set +e
+
           if [ -n "${KEYCHAIN_PATH:-}" ]; then
-            security delete-keychain "$KEYCHAIN_PATH" || true
+            security delete-keychain "$KEYCHAIN_PATH"
           fi
 
           rm -f "$RUNNER_TEMP/sealow_distribution.p12"
