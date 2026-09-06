@@ -577,7 +577,7 @@ jobs:
       # CONFIGURE GODOT FOR MANUAL DISTRIBUTION SIGNING
       # ============================================================
 
-      - name: Configure Godot iOS signing and build number
+      - name: Configure Godot iOS signing, build number, and iPhone target
         env:
           PROFILE_UUID: ${{ steps.profile.outputs.profile_uuid }}
           PROFILE_NAME: ${{ steps.profile.outputs.profile_name }}
@@ -589,6 +589,7 @@ jobs:
 
           echo "GitHub run number: $IOS_BUILD_NUMBER"
           echo "This will become the iOS build number."
+          echo "Forcing iPhone-only target."
 
           python3 <<'PY'
           import os
@@ -666,7 +667,36 @@ jobs:
               else:
                   text += "\n" + replacement + "\n"
 
-          # Godot is currently performing the Xcode archive itself.
+          def set_number(key, value):
+              global text
+
+              pattern = (
+                  r"^"
+                  + re.escape(key)
+                  + r"=.*$"
+              )
+
+              replacement = (
+                  key
+                  + "="
+                  + str(value)
+              )
+
+              if re.search(
+                  pattern,
+                  text,
+                  flags=re.MULTILINE
+              ):
+                  text = re.sub(
+                      pattern,
+                      replacement,
+                      text,
+                      flags=re.MULTILINE
+                  )
+              else:
+                  text += "\n" + replacement + "\n"
+
+          # Godot is performing the archive itself.
           set_bool(
               "application/export_project_only",
               False
@@ -702,13 +732,19 @@ jobs:
               profile_name
           )
 
-          # IMPORTANT:
-          # Use the GitHub Actions run number as CFBundleVersion.
-          # Example:
-          #   GitHub run 41 -> SeaLow 0.2 (41)
+          # GitHub Actions run number -> CFBundleVersion.
           set_string(
               "application/version",
               build_number
+          )
+
+          # Force iPhone-only.
+          # Godot iOS targeted device family:
+          #   1 = iPhone
+          #   2 = iPad
+          set_number(
+              "application/targeted_device_family",
+              1
           )
 
           path.write_text(text)
@@ -720,6 +756,7 @@ jobs:
               "bundle_identifier",
               "short_version",
               "application/version",
+              "targeted_device_family",
               "export_project_only",
               "code_sign_identity",
               "provisioning_profile",
@@ -754,9 +791,17 @@ jobs:
             "^application/version=\"${IOS_BUILD_NUMBER}\"$" \
             export_presets.cfg
 
+          grep -q \
+            '^application/targeted_device_family=1$' \
+            export_presets.cfg || {
+              echo "::error::iOS target is not forced to iPhone-only"
+              exit 1
+            }
+
           echo ""
           echo "Godot signing configuration looks correct."
           echo "iOS build number: $IOS_BUILD_NUMBER"
+          echo "iOS targeted device family: iPhone only (1)"
 
       # ============================================================
       # IMPORT PROJECT
@@ -820,6 +865,41 @@ jobs:
             --path . \
             --export-release "iOS" \
             build/ios/SeaLow.ipa
+
+          echo ""
+          echo "=== Verify generated Xcode device family ==="
+
+          XCODEPROJ="$(
+            find build/ios \
+              -type d \
+              -name "*.xcodeproj" \
+              -print \
+              -quit
+          )"
+
+          if [ -n "$XCODEPROJ" ] && [ -f "$XCODEPROJ/project.pbxproj" ]; then
+            echo "Generated Xcode project:"
+            echo "$XCODEPROJ"
+
+            echo ""
+            echo "TARGETED_DEVICE_FAMILY entries:"
+            grep -n "TARGETED_DEVICE_FAMILY" \
+              "$XCODEPROJ/project.pbxproj" \
+              || true
+
+            if grep -Eq 'TARGETED_DEVICE_FAMILY = "?2"?;' "$XCODEPROJ/project.pbxproj"; then
+              echo "::error::Generated Xcode project contains iPad-only TARGETED_DEVICE_FAMILY=2"
+              exit 1
+            fi
+
+            if ! grep -Eq 'TARGETED_DEVICE_FAMILY = "?1"?;' "$XCODEPROJ/project.pbxproj"; then
+              echo "::warning::Could not confirm TARGETED_DEVICE_FAMILY=1 in generated Xcode project."
+            else
+              echo "Generated Xcode project confirms iPhone-only target."
+            fi
+          else
+            echo "::warning::Generated Xcode project was not available for device-family inspection."
+          fi
 
           echo ""
           echo "=== Generated build files ==="
