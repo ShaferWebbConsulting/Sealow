@@ -1,4 +1,4 @@
-name: Build SeaLow iOS
+name: Build SeaLow for IOS and upload to App Store Connect Test Flight
 
 on:
   workflow_dispatch:
