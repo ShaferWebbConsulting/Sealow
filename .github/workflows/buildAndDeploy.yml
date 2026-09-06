@@ -821,6 +821,187 @@ jobs:
           echo "IPA: $IPA_PATH"
 
       # ============================================================
+      # APP STORE CONNECT / TESTFLIGHT UPLOAD
+      #
+      # Required GitHub Secrets:
+      #
+      # APP_STORE_CONNECT_KEY_ID
+      # APP_STORE_CONNECT_ISSUER_ID
+      # APP_STORE_CONNECT_PRIVATE_KEY
+      #
+      # APP_STORE_CONNECT_PRIVATE_KEY must contain the full .p8 contents.
+      # ============================================================
+
+      - name: Validate App Store Connect secrets
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+
+          echo "Checking App Store Connect upload credentials..."
+
+          if [ -z "${APP_STORE_CONNECT_KEY_ID:-}" ]; then
+            echo "::error::APP_STORE_CONNECT_KEY_ID is missing or empty"
+            exit 1
+          fi
+
+          if [ -z "${APP_STORE_CONNECT_ISSUER_ID:-}" ]; then
+            echo "::error::APP_STORE_CONNECT_ISSUER_ID is missing or empty"
+            exit 1
+          fi
+
+          if [ -z "${APP_STORE_CONNECT_PRIVATE_KEY:-}" ]; then
+            echo "::error::APP_STORE_CONNECT_PRIVATE_KEY is missing or empty"
+            exit 1
+          fi
+
+          echo "APP_STORE_CONNECT_KEY_ID: present"
+          echo "APP_STORE_CONNECT_ISSUER_ID: present"
+          echo "APP_STORE_CONNECT_PRIVATE_KEY: present"
+
+          echo "Key ID character count: ${#APP_STORE_CONNECT_KEY_ID}"
+          echo "Issuer ID character count: ${#APP_STORE_CONNECT_ISSUER_ID}"
+          echo "Private key character count: ${#APP_STORE_CONNECT_PRIVATE_KEY}"
+
+          if [[ ! "$APP_STORE_CONNECT_PRIVATE_KEY" == *"BEGIN PRIVATE KEY"* ]]; then
+            echo "::error::APP_STORE_CONNECT_PRIVATE_KEY does not appear to contain a PEM private key"
+            exit 1
+          fi
+
+          if [[ ! "$APP_STORE_CONNECT_PRIVATE_KEY" == *"END PRIVATE KEY"* ]]; then
+            echo "::error::APP_STORE_CONNECT_PRIVATE_KEY is missing the END PRIVATE KEY marker"
+            exit 1
+          fi
+
+          echo "App Store Connect secrets look structurally valid."
+
+      - name: Install App Store Connect API key
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+
+          ASC_KEY_DIR="$HOME/.appstoreconnect/private_keys"
+          ASC_KEY_PATH="$ASC_KEY_DIR/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+
+          mkdir -p "$ASC_KEY_DIR"
+
+          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" \
+            | tr -d '\r' \
+            > "$ASC_KEY_PATH"
+
+          chmod 600 "$ASC_KEY_PATH"
+
+          echo "App Store Connect API key written:"
+          echo "$ASC_KEY_PATH"
+
+          echo ""
+          echo "Validating PEM structure..."
+
+          if ! grep -q '^-----BEGIN PRIVATE KEY-----$' "$ASC_KEY_PATH"; then
+            echo "::error::Private key is missing a valid BEGIN PRIVATE KEY line"
+            exit 1
+          fi
+
+          if ! grep -q '^-----END PRIVATE KEY-----$' "$ASC_KEY_PATH"; then
+            echo "::error::Private key is missing a valid END PRIVATE KEY line"
+            exit 1
+          fi
+
+          echo "Private key PEM structure looks valid."
+
+          echo "ASC_KEY_PATH=$ASC_KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Locate IPA for App Store Connect
+        id: ipa
+        run: |
+          set -euo pipefail
+
+          IPA_PATH="$(
+            find build/ios \
+              -type f \
+              -name "*.ipa" \
+              -print \
+              -quit
+          )"
+
+          if [ -z "$IPA_PATH" ]; then
+            echo "::error::No IPA found under build/ios"
+            exit 1
+          fi
+
+          echo "IPA found:"
+          ls -lh "$IPA_PATH"
+
+          echo "ipa_path=$IPA_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Validate IPA with App Store Connect
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          IPA_PATH: ${{ steps.ipa.outputs.ipa_path }}
+        run: |
+          set -euo pipefail
+
+          echo "=========================================="
+          echo "Validating SeaLow with App Store Connect"
+          echo "=========================================="
+          echo "IPA: $IPA_PATH"
+          echo "Key ID length: ${#APP_STORE_CONNECT_KEY_ID}"
+          echo "Issuer ID length: ${#APP_STORE_CONNECT_ISSUER_ID}"
+
+          echo ""
+          echo "Xcode version:"
+          xcodebuild -version
+
+          echo ""
+          echo "Checking altool availability..."
+          xcrun altool --help >/dev/null
+
+          echo ""
+          echo "Starting App Store Connect validation..."
+
+          xcrun altool \
+            --validate-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+
+          echo ""
+          echo "App Store Connect validation succeeded."
+
+      - name: Upload IPA to App Store Connect
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          IPA_PATH: ${{ steps.ipa.outputs.ipa_path }}
+        run: |
+          set -euo pipefail
+
+          echo "=========================================="
+          echo "Uploading SeaLow to App Store Connect"
+          echo "=========================================="
+          echo "IPA: $IPA_PATH"
+
+          xcrun altool \
+            --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+
+          echo ""
+          echo "=========================================="
+          echo "UPLOAD ACCEPTED BY APP STORE CONNECT"
+          echo "=========================================="
+          echo "Apple will now process the build."
+          echo "After processing, it will appear under SeaLow -> TestFlight."
+
+      # ============================================================
       # ARTIFACTS
       # ============================================================
 
