@@ -151,85 +151,128 @@ jobs:
           import os
           import re
           import base64
+          import binascii
           import hashlib
           from pathlib import Path
 
-          raw = os.environ.get("IOS_CERTIFICATE_BASE64", "")
+          NAME = "IOS_CERTIFICATE_BASE64"
+          raw = os.environ.get(NAME, "")
 
           print("=== Certificate Base64 diagnostics ===")
-          print(f"Raw secret characters: {len(raw)}")
+          print(f"Secret present: {'yes' if bool(raw) else 'no'}")
+          print(f"Raw character count: {len(raw)}")
+          print(f"Actual LF newlines: {raw.count(chr(10))}")
+          print(f"Actual CR characters: {raw.count(chr(13))}")
+          print(f"Tabs: {raw.count(chr(9))}")
+          print(f"Spaces: {raw.count(' ')}")
+          print(f"Literal \\\\n sequences: {raw.count(r'\\n')}")
+          print(f"Literal \\\\r sequences: {raw.count(r'\\r')}")
+          print(f"Slash '/' count: {raw.count('/')}")
+          print(f"Backslash '\\\\' count: {raw.count(chr(92))}")
+          print(f"Contains URL-safe '-': {'yes' if '-' in raw else 'no'}")
+          print(f"Contains URL-safe '_': {'yes' if '_' in raw else 'no'}")
 
           if not raw:
-              raise SystemExit(
-                  "ERROR: IOS_CERTIFICATE_BASE64 is empty"
-              )
+              raise SystemExit(f"ERROR: {NAME} is empty")
 
-          # Remove accidental surrounding quotation marks.
-          if (
-              len(raw) >= 2
-              and raw[0] == raw[-1]
-              and raw[0] in ("'", '"')
-          ):
-              print("Removing accidental surrounding quotes.")
+          # Do not print the secret itself in CI logs.
+          # Partial secret fragments can escape GitHub's masking.
+          print("Raw beginning/end: intentionally not printed in CI for secret safety")
+
+          # Remove UTF-8 BOM if somehow pasted in.
+          raw = raw.lstrip("\ufeff")
+
+          # Remove a single pair of accidental surrounding quotes.
+          if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in ("'", '"'):
+              print("FIX: Removing accidental surrounding quotes.")
               raw = raw[1:-1]
 
-          # GitHub/browser copy-paste may introduce visual or real
-          # whitespace/newlines. Base64 does not need them.
+          # Remove a data-URI prefix if someone pasted one.
+          if raw.lower().startswith("data:") and ";base64," in raw.lower():
+              print("FIX: Removing data:...;base64, prefix.")
+              raw = raw.split(",", 1)[1]
+
+          # If copy/paste stored literal escape sequences, remove them.
+          # Example: ABC/\\nDEF becomes ABC/DEF.
+          before = raw
+          raw = raw.replace("\\r\\n", "").replace("\\n", "").replace("\\r", "").replace("\\t", "")
+          if raw != before:
+              print("FIX: Removed literal \\\\n/\\\\r/\\\\t escape sequences.")
+
+          # Remove real whitespace/newlines introduced by wrapping.
+          before_len = len(raw)
           cleaned = re.sub(r"\s+", "", raw)
+          removed_ws = before_len - len(cleaned)
+          print(f"FIX: Removed {removed_ws} real whitespace characters.")
 
-          print(f"Characters after whitespace removal: {len(cleaned)}")
+          # '/' is VALID standard Base64. Never remove it.
+          # Browser wrapping after '/' is harmless once whitespace is removed.
+          print("INFO: '/' is valid Base64 and is preserved.")
 
-          if "BEGIN CERTIFICATE" in cleaned:
+          # Accept URL-safe Base64 too by normalizing '-' -> '+' and '_' -> '/'.
+          if "-" in cleaned or "_" in cleaned:
+              print("FIX: URL-safe Base64 characters detected; converting '-'->'+' and '_'->'/'.")
+              cleaned = cleaned.replace("-", "+").replace("_", "/")
+
+          # Diagnose illegal characters without printing secret content.
+          allowed = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=")
+          bad = [(i, ord(ch)) for i, ch in enumerate(cleaned) if ch not in allowed]
+
+          print(f"Normalized character count: {len(cleaned)}")
+          print(f"Invalid Base64 characters: {len(bad)}")
+          if bad:
+              print("First invalid positions/codepoints:", bad[:20])
               raise SystemExit(
-                  "ERROR: This appears to be PEM certificate text, "
-                  "not Base64 of a .p12 file."
+                  "ERROR: Secret contains characters outside the Base64 alphabet. "
+                  "The positions/codepoints above identify the corruption without exposing the secret."
               )
 
-          # Repair missing trailing Base64 padding if necessary.
+          # '=' padding may only appear at the end.
+          first_pad = cleaned.find("=")
+          if first_pad != -1 and any(ch != "=" for ch in cleaned[first_pad:]):
+              raise SystemExit("ERROR: '=' padding appears in the middle of the Base64 value.")
+
           remainder = len(cleaned) % 4
+          print(f"Length modulo 4: {remainder}")
+          print(f"Ends with '=' padding: {'yes' if cleaned.endswith('=') else 'no'}")
 
-          if remainder:
-              print(
-                  f"Base64 length remainder: {remainder}. "
-                  "Adding trailing padding."
-              )
-
-              cleaned += "=" * (4 - remainder)
-
-          try:
-              decoded = base64.b64decode(
-                  cleaned,
-                  validate=True
-              )
-          except Exception as exc:
+          if remainder == 1:
               raise SystemExit(
-                  f"ERROR: IOS_CERTIFICATE_BASE64 is invalid Base64: {exc}"
+                  "ERROR: Base64 length modulo 4 is 1. This cannot be repaired with padding. "
+                  "Whitespace, literal slash-wrap newlines, quotes, data-URI prefixes, and URL-safe characters "
+                  "were already normalized, so the stored secret is genuinely truncated/corrupted."
               )
+
+          if remainder in (2, 3):
+              padding = 4 - remainder
+              print(f"FIX: Adding {padding} trailing '=' padding character(s).")
+              cleaned += "=" * padding
+
+          # Decode strictly after all safe normalization.
+          try:
+              decoded = base64.b64decode(cleaned, validate=True)
+          except (binascii.Error, ValueError) as exc:
+              raise SystemExit(f"ERROR: {NAME} is still invalid Base64 after normalization: {exc}")
 
           if len(decoded) < 500:
-              raise SystemExit(
-                  f"ERROR: Decoded .p12 is suspiciously small: "
-                  f"{len(decoded)} bytes"
-              )
+              raise SystemExit(f"ERROR: Decoded P12 is suspiciously small: {len(decoded)} bytes")
 
-          destination = (
-              Path(os.environ["RUNNER_TEMP"])
-              / "sealow_distribution.p12"
-          )
-
+          destination = Path(os.environ["RUNNER_TEMP"]) / "sealow_distribution.p12"
           destination.write_bytes(decoded)
 
           print(f"Decoded P12 bytes: {len(decoded)}")
-          print(
-              "Decoded P12 SHA256: "
-              + hashlib.sha256(decoded).hexdigest()
-          )
+          print("Decoded P12 SHA256:", hashlib.sha256(decoded).hexdigest())
           print(f"Certificate written to: {destination}")
           PY
 
           echo ""
           echo "Decoded certificate file:"
           ls -lh "$CERTIFICATE_PATH"
+
+          echo ""
+          echo "Password diagnostics (value is NOT printed):"
+          echo "Password present: $([ -n "${IOS_CERTIFICATE_PASSWORD:-}" ] && echo yes || echo no)"
+          echo "Password character count: ${#IOS_CERTIFICATE_PASSWORD}"
 
           echo ""
           echo "Validating PKCS#12 structure and password..."
@@ -240,7 +283,7 @@ jobs:
             -info \
             -noout; then
 
-            echo "::error::The decoded file is not a valid P12 OR IOS_CERTIFICATE_PASSWORD is incorrect."
+            echo "::error::Decoded file is not a valid P12 OR IOS_CERTIFICATE_PASSWORD is incorrect."
             exit 1
           fi
 
@@ -343,80 +386,94 @@ jobs:
           import os
           import re
           import base64
+          import binascii
           import hashlib
           from pathlib import Path
 
-          raw = os.environ.get(
-              "IOS_PROVISIONING_PROFILE_BASE64",
-              ""
-          )
+          NAME = "IOS_PROVISIONING_PROFILE_BASE64"
+          raw = os.environ.get(NAME, "")
 
           print("=== Provisioning profile Base64 diagnostics ===")
-          print(f"Raw secret characters: {len(raw)}")
+          print(f"Secret present: {'yes' if bool(raw) else 'no'}")
+          print(f"Raw character count: {len(raw)}")
+          print(f"Actual LF newlines: {raw.count(chr(10))}")
+          print(f"Actual CR characters: {raw.count(chr(13))}")
+          print(f"Tabs: {raw.count(chr(9))}")
+          print(f"Spaces: {raw.count(' ')}")
+          print(f"Literal \\\\n sequences: {raw.count(r'\\n')}")
+          print(f"Literal \\\\r sequences: {raw.count(r'\\r')}")
+          print(f"Slash '/' count: {raw.count('/')}")
+          print(f"Backslash '\\\\' count: {raw.count(chr(92))}")
 
           if not raw:
-              raise SystemExit(
-                  "ERROR: IOS_PROVISIONING_PROFILE_BASE64 is empty"
-              )
+              raise SystemExit(f"ERROR: {NAME} is empty")
 
-          if (
-              len(raw) >= 2
-              and raw[0] == raw[-1]
-              and raw[0] in ("'", '"')
-          ):
-              print("Removing accidental surrounding quotes.")
+          print("Raw beginning/end: intentionally not printed in CI for secret safety")
+
+          raw = raw.lstrip("\ufeff")
+
+          if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in ("'", '"'):
+              print("FIX: Removing accidental surrounding quotes.")
               raw = raw[1:-1]
 
-          # Remove spaces, CR, LF and tabs.
-          cleaned = re.sub(r"\s+", "", raw)
+          if raw.lower().startswith("data:") and ";base64," in raw.lower():
+              print("FIX: Removing data:...;base64, prefix.")
+              raw = raw.split(",", 1)[1]
 
-          print(
-              "Characters after whitespace removal: "
-              f"{len(cleaned)}"
-          )
+          before = raw
+          raw = raw.replace("\\r\\n", "").replace("\\n", "").replace("\\r", "").replace("\\t", "")
+          if raw != before:
+              print("FIX: Removed literal \\\\n/\\\\r/\\\\t escape sequences.")
+
+          before_len = len(raw)
+          cleaned = re.sub(r"\s+", "", raw)
+          removed_ws = before_len - len(cleaned)
+          print(f"FIX: Removed {removed_ws} real whitespace characters.")
+          print("INFO: '/' is valid Base64 and is preserved.")
+
+          if "-" in cleaned or "_" in cleaned:
+              print("FIX: URL-safe Base64 detected; converting to standard Base64.")
+              cleaned = cleaned.replace("-", "+").replace("_", "/")
+
+          allowed = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=")
+          bad = [(i, ord(ch)) for i, ch in enumerate(cleaned) if ch not in allowed]
+
+          print(f"Normalized character count: {len(cleaned)}")
+          print(f"Invalid Base64 characters: {len(bad)}")
+          if bad:
+              print("First invalid positions/codepoints:", bad[:20])
+              raise SystemExit("ERROR: Provisioning profile secret contains invalid Base64 characters.")
+
+          first_pad = cleaned.find("=")
+          if first_pad != -1 and any(ch != "=" for ch in cleaned[first_pad:]):
+              raise SystemExit("ERROR: '=' padding appears in the middle of the Base64 value.")
 
           remainder = len(cleaned) % 4
+          print(f"Length modulo 4: {remainder}")
 
-          if remainder:
-              print(
-                  f"Adding {4 - remainder} Base64 padding characters."
+          if remainder == 1:
+              raise SystemExit(
+                  "ERROR: Provisioning-profile Base64 length modulo 4 is 1 and cannot be safely repaired."
               )
 
-              cleaned += "=" * (4 - remainder)
+          if remainder in (2, 3):
+              padding = 4 - remainder
+              print(f"FIX: Adding {padding} trailing '=' padding character(s).")
+              cleaned += "=" * padding
 
           try:
-              decoded = base64.b64decode(
-                  cleaned,
-                  validate=True
-              )
-          except Exception as exc:
-              raise SystemExit(
-                  "ERROR: Provisioning profile secret "
-                  f"is invalid Base64: {exc}"
-              )
+              decoded = base64.b64decode(cleaned, validate=True)
+          except (binascii.Error, ValueError) as exc:
+              raise SystemExit(f"ERROR: Provisioning profile remains invalid Base64: {exc}")
 
           if len(decoded) < 500:
-              raise SystemExit(
-                  "ERROR: Provisioning profile is "
-                  f"suspiciously small: {len(decoded)} bytes"
-              )
+              raise SystemExit(f"ERROR: Provisioning profile is suspiciously small: {len(decoded)} bytes")
 
-          destination = (
-              Path(os.environ["RUNNER_TEMP"])
-              / "SeaLow.mobileprovision"
-          )
-
+          destination = Path(os.environ["RUNNER_TEMP"]) / "SeaLow.mobileprovision"
           destination.write_bytes(decoded)
 
-          print(
-              f"Decoded profile bytes: {len(decoded)}"
-          )
-
-          print(
-              "Profile SHA256: "
-              + hashlib.sha256(decoded).hexdigest()
-          )
-
+          print(f"Decoded profile bytes: {len(decoded)}")
+          print("Profile SHA256:", hashlib.sha256(decoded).hexdigest())
           print(f"Written to: {destination}")
           PY
 
