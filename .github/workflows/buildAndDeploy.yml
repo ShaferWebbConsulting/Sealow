@@ -10,6 +10,7 @@ env:
   APPLE_TEAM_ID: "ZGF3WKWZVS"
   BUNDLE_ID: "com.shaferwebbconsulting.sealow"
   SCHEME: "SeaLow"
+  IOS_BUILD_NUMBER: ${{ github.run_number }}
 
 jobs:
   build-ios:
@@ -576,14 +577,18 @@ jobs:
       # CONFIGURE GODOT FOR MANUAL DISTRIBUTION SIGNING
       # ============================================================
 
-      - name: Configure Godot iOS signing
+      - name: Configure Godot iOS signing and build number
         env:
           PROFILE_UUID: ${{ steps.profile.outputs.profile_uuid }}
           PROFILE_NAME: ${{ steps.profile.outputs.profile_name }}
+          IOS_BUILD_NUMBER: ${{ github.run_number }}
         run: |
           set -euo pipefail
 
           test -f export_presets.cfg
+
+          echo "GitHub run number: $IOS_BUILD_NUMBER"
+          echo "This will become the iOS build number."
 
           python3 <<'PY'
           import os
@@ -591,11 +596,16 @@ jobs:
           from pathlib import Path
 
           path = Path("export_presets.cfg")
-
           text = path.read_text()
 
           profile_uuid = os.environ["PROFILE_UUID"]
           profile_name = os.environ["PROFILE_NAME"]
+          build_number = os.environ["IOS_BUILD_NUMBER"]
+
+          if not build_number.isdigit():
+              raise SystemExit(
+                  f"ERROR: IOS_BUILD_NUMBER must be numeric, got: {build_number!r}"
+              )
 
           def set_string(key, value):
               global text
@@ -692,13 +702,24 @@ jobs:
               profile_name
           )
 
+          # IMPORTANT:
+          # Use the GitHub Actions run number as CFBundleVersion.
+          # Example:
+          #   GitHub run 41 -> SeaLow 0.2 (41)
+          set_string(
+              "application/version",
+              build_number
+          )
+
           path.write_text(text)
 
-          print("=== Final Godot signing options ===")
+          print("=== Final Godot iOS options ===")
 
           wanted = (
               "app_store_team_id",
               "bundle_identifier",
+              "short_version",
+              "application/version",
               "export_project_only",
               "code_sign_identity",
               "provisioning_profile",
@@ -729,8 +750,13 @@ jobs:
             "^application/provisioning_profile_specifier_release=\"${PROFILE_NAME}\"$" \
             export_presets.cfg
 
+          grep -q \
+            "^application/version=\"${IOS_BUILD_NUMBER}\"$" \
+            export_presets.cfg
+
           echo ""
           echo "Godot signing configuration looks correct."
+          echo "iOS build number: $IOS_BUILD_NUMBER"
 
       # ============================================================
       # IMPORT PROJECT
@@ -770,6 +796,7 @@ jobs:
           echo "=========================================="
           echo "Team ID: $APPLE_TEAM_ID"
           echo "Bundle ID: $BUNDLE_ID"
+          echo "iOS build number: $IOS_BUILD_NUMBER"
           echo "Profile name: $PROFILE_NAME"
           echo "Profile UUID: $PROFILE_UUID"
 
