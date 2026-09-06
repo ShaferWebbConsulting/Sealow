@@ -577,7 +577,7 @@ jobs:
       # CONFIGURE GODOT FOR MANUAL DISTRIBUTION SIGNING
       # ============================================================
 
-      - name: Configure Godot iOS signing, build number, and iPhone target
+      - name: Configure Godot iOS signing, build number, and force iPhone only
         env:
           PROFILE_UUID: ${{ steps.profile.outputs.profile_uuid }}
           PROFILE_NAME: ${{ steps.profile.outputs.profile_name }}
@@ -739,12 +739,17 @@ jobs:
           )
 
           # Force iPhone-only.
-          # Godot iOS targeted device family:
-          #   1 = iPhone
-          #   2 = iPad
+          #
+          # IMPORTANT: Godot uses an ENUM INDEX here, not Apple's
+          # UIDeviceFamily / Xcode TARGETED_DEVICE_FAMILY value:
+          #
+          #   Godot 0 -> iPhone        -> Xcode TARGETED_DEVICE_FAMILY = 1
+          #   Godot 1 -> iPad          -> Xcode TARGETED_DEVICE_FAMILY = 2
+          #   Godot 2 -> iPhone & iPad -> Xcode TARGETED_DEVICE_FAMILY = "1,2"
+          #
           set_number(
               "application/targeted_device_family",
-              1
+              0
           )
 
           path.write_text(text)
@@ -792,16 +797,16 @@ jobs:
             export_presets.cfg
 
           grep -q \
-            '^application/targeted_device_family=1$' \
+            '^application/targeted_device_family=0$' \
             export_presets.cfg || {
-              echo "::error::iOS target is not forced to iPhone-only"
+              echo "::error::Godot iOS target is not forced to iPhone-only enum value 0"
               exit 1
             }
 
           echo ""
           echo "Godot signing configuration looks correct."
           echo "iOS build number: $IOS_BUILD_NUMBER"
-          echo "iOS targeted device family: iPhone only (1)"
+          echo "Godot targeted device family: iPhone only (enum 0 -> Xcode family 1)"
 
       # ============================================================
       # IMPORT PROJECT
@@ -887,16 +892,30 @@ jobs:
               "$XCODEPROJ/project.pbxproj" \
               || true
 
-            if grep -Eq 'TARGETED_DEVICE_FAMILY = "?2"?;' "$XCODEPROJ/project.pbxproj"; then
-              echo "::error::Generated Xcode project contains iPad-only TARGETED_DEVICE_FAMILY=2"
+            DEVICE_FAMILY_LINES="$(
+              grep "TARGETED_DEVICE_FAMILY" "$XCODEPROJ/project.pbxproj" || true
+            )"
+
+            if [ -z "$DEVICE_FAMILY_LINES" ]; then
+              echo "::error::No TARGETED_DEVICE_FAMILY entries found in generated Xcode project."
               exit 1
             fi
 
-            if ! grep -Eq 'TARGETED_DEVICE_FAMILY = "?1"?;' "$XCODEPROJ/project.pbxproj"; then
-              echo "::warning::Could not confirm TARGETED_DEVICE_FAMILY=1 in generated Xcode project."
-            else
-              echo "Generated Xcode project confirms iPhone-only target."
+            BAD_DEVICE_FAMILY_LINES="$(
+              printf '%s\n' "$DEVICE_FAMILY_LINES" \
+                | grep -Ev 'TARGETED_DEVICE_FAMILY = "?1"?;' \
+                || true
+            )"
+
+            if [ -n "$BAD_DEVICE_FAMILY_LINES" ]; then
+              echo "::error::Generated Xcode project is not iPhone-only."
+              echo "::error::Every TARGETED_DEVICE_FAMILY entry must resolve to 1."
+              echo "$BAD_DEVICE_FAMILY_LINES"
+              exit 1
             fi
+
+            echo "Generated Xcode project confirms iPhone-only target:"
+            echo 'TARGETED_DEVICE_FAMILY = 1'
           else
             echo "::warning::Generated Xcode project was not available for device-family inspection."
           fi
