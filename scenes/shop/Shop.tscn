@@ -79,6 +79,30 @@ theme_override_font_sizes/font_size = 26
 text = "🐚 0 Shells"
 horizontal_alignment = 1
 
+[node name="HpUpgradePanel" type="PanelContainer" parent="SafeArea/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_shells")
+
+[node name="HBox" type="HBoxContainer" parent="SafeArea/VBox/HpUpgradePanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="MaxHpLabel" type="Label" parent="SafeArea/VBox/HpUpgradePanel/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "❤️ MAX HP: 12"
+vertical_alignment = 1
+
+[node name="BuyHpButton" type="Button" parent="SafeArea/VBox/HpUpgradePanel/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "+1 HP — 5 🐚"
+
 [node name="MessageLabel" type="Label" parent="SafeArea/VBox"]
 unique_name_in_owner = true
 layout_mode = 2

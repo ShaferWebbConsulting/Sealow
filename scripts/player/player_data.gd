@@ -18,17 +18,28 @@ const DEFAULT_SAVE: Dictionary = {
 		"mermaid_scale": 1,
 		"seaweed_circle": 1,
 	},
+	## Persistent player max HP (see Shop's +1 Max HP upgrade). Battle no
+	## longer hardcodes PLAYER_MAX_HP — it always reads this via
+	## SaveManager.get_max_hp().
+	"max_hp": 12,
+	## Enemy progression (see EnemyData for the full roster + unlock order).
+	## A brand-new save starts with only the first enemy unlocked.
+	"selected_enemy": "little_octo",
+	"beaten_enemies": [],
+	"unlocked_enemies": ["little_octo"],
 }
 
 ## Metadata for each selectable starter creature. Gameplay stats are
 ## intentionally identical for all of them in v0.2 — this is a cosmetic /
-## identity choice only.
+## identity choice only. `atlas` points at the matching cell in
+## charactersList.png (Row 1 — Starter/Surface) so Character Select and
+## Battle can render real art instead of an emoji glyph.
 const CHARACTER_TYPES: Dictionary = {
-	"octopus": {"emoji": "🐙", "display_name": "Little Octo"},
-	"crab": {"emoji": "🦀", "display_name": "Little Crab"},
-	"shrimp": {"emoji": "🦐", "display_name": "Little Shrimp"},
-	"fish": {"emoji": "🐟", "display_name": "Little Fish"},
-	"SeaSnake": {"emoji": "🐍", "display_name": "Snake coming soon..."},
+	"octopus": {"emoji": "🐙", "display_name": "Little Octo", "atlas": Vector2i(0, 0)},
+	"crab": {"emoji": "🦀", "display_name": "Little Crab", "atlas": Vector2i(1, 0)},
+	"shrimp": {"emoji": "🦐", "display_name": "Little Shrimp", "atlas": Vector2i(2, 0)},
+	"fish": {"emoji": "🐟", "display_name": "Little Fish", "atlas": Vector2i(3, 0)},
+	"SeaSnake": {"emoji": "🐍", "display_name": "Snake coming soon...", "atlas": Vector2i(4, 1)},
 	#TODO IMPLEMENT SNAKE
 
 }
@@ -61,6 +72,13 @@ const CHARACTER_COLOR_ORDER: Array[String] = [
 static func get_emoji(character_type: String) -> String:
 	var info: Dictionary = CHARACTER_TYPES.get(character_type, CHARACTER_TYPES["octopus"])
 	return info["emoji"]
+
+
+## charactersList.png atlas cell (zero-based Vector2i(column, row)) for the
+## given playable creature. Use with SeaLowAtlas.get_character_texture().
+static func get_atlas_cell(character_type: String) -> Vector2i:
+	var info: Dictionary = CHARACTER_TYPES.get(character_type, CHARACTER_TYPES["octopus"])
+	return info.get("atlas", Vector2i(0, 0))
 
 
 static func get_display_name(character_type: String) -> String:

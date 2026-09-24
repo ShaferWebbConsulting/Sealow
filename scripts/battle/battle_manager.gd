@@ -4,11 +4,11 @@ const DiceRules = preload("res://scripts/battle/dice_rules.gd")
 const PlayerDataScript = preload("res://scripts/player/player_data.gd")
 const ItemDataScript = preload("res://scripts/items/item_data.gd")
 const ItemEffectsScript = preload("res://scripts/items/item_effects.gd")
+const EnemyDataScript = preload("res://scripts/enemies/enemy_data.gd")
+const SeaLowAtlasScript = preload("res://scripts/assets/sea_low_atlas.gd")
 
-const PLAYER_MAX_HP: int = 12
-const CRAB_MAX_HP: int = 10
 const PLAYER_DICE_COUNT: int = 3
-const CRAB_DICE_COUNT: int = 3
+const ENEMY_DICE_COUNT: int = 3
 const VICTORY_SHELLS: int = 10
 
 const HP_TWEEN_DURATION: float = 0.3
@@ -41,8 +41,18 @@ enum BattleState {
 
 var state: BattleState = BattleState.PLAYER_TURN
 
-var player_hp: int = PLAYER_MAX_HP
-var crab_hp: int = CRAB_MAX_HP
+## Player max HP is persistent (see SaveManager.get_max_hp() / the Shop's
+## +1 Max HP upgrade) instead of a fixed player_max_hp constant.
+var player_max_hp: int = 12
+var player_hp: int = player_max_hp
+
+## The opponent is no longer hardcoded to "Crab" — it's whatever enemy the
+## player picked on the Enemy Select screen (SaveManager.get_selected_enemy()),
+## resolved through EnemyData at battle start.
+var enemy_key: String = ""
+var enemy_data: Dictionary = {}
+var enemy_max_hp: int = 10
+var enemy_hp: int = enemy_max_hp
 
 var exiting_scene: bool = false
 var round_number: int = 0
@@ -75,11 +85,11 @@ var _enemy_sprite_home: Vector2 = Vector2.ZERO
 
 @onready var turn_banner: Label = %TurnBanner
 
-@onready var octo_hp_label: Label = %OctoHpLabel
-@onready var crab_hp_label: Label = %CrabHpLabel
+@onready var player_hp_label: Label = %PlayerHpLabel
+@onready var enemy_hp_label: Label = %EnemyHpLabel
 
-@onready var octo_hp_bar: ProgressBar = %OctoHpBar
-@onready var crab_hp_bar: ProgressBar = %CrabHpBar
+@onready var player_hp_bar: ProgressBar = %PlayerHpBar
+@onready var enemy_hp_bar: ProgressBar = %EnemyHpBar
 
 @onready var roll_button: Button = %RollButton
 @onready var item_button: Button = %ItemButton
@@ -91,7 +101,7 @@ var _enemy_sprite_home: Vector2 = Vector2.ZERO
 @onready var enemy_roll_label: Label = %EnemyRollLabel
 
 @onready var player_dice_row: HBoxContainer = %PlayerDiceRow
-@onready var crab_dice_row: HBoxContainer = %EnemyDiceRow
+@onready var enemy_dice_row: HBoxContainer = %EnemyDiceRow
 
 @onready var player_dice: Array[Dice] = [
 	%PlayerDie1,
@@ -99,7 +109,7 @@ var _enemy_sprite_home: Vector2 = Vector2.ZERO
 	%PlayerDie3,
 ]
 
-@onready var crab_dice: Array[Dice] = [
+@onready var enemy_dice: Array[Dice] = [
 	%EnemyDie1,
 	%EnemyDie2,
 	%EnemyDie3,
@@ -110,14 +120,16 @@ var _enemy_sprite_home: Vector2 = Vector2.ZERO
 @onready var log_list: VBoxContainer = %LogList
 
 
-@onready var crab_damage_label: Label = %CrabDamageLabel
-@onready var octo_damage_label: Label = %OctoDamageLabel
+@onready var enemy_damage_label: Label = %EnemyDamageLabel
+@onready var player_damage_label: Label = %PlayerDamageLabel
 
 
-@onready var player_name_label: Label = %OctoName
-@onready var player_sprite_label: Label = %PlayerSprite
-@onready var enemy_sprite_label: Label = %EnemySprite
+@onready var player_name_label: Label = %PlayerName
+@onready var enemy_name_label: Label = %EnemyName
+@onready var player_sprite: TextureRect = %PlayerSprite
+@onready var enemy_sprite: TextureRect = %EnemySprite
 @onready var player_color_dot: Panel = %PlayerColorDot
+@onready var depth_background: TextureRect = %DepthBackground
 
 
 @onready var victory_panel: Control = %VictoryPanel
@@ -178,13 +190,14 @@ func _ready() -> void:
 	item_popup.item_used.connect(_on_item_used)
 
 	_setup_player_character()
+	_setup_enemy()
 	start_battle()
 
 	# Capture sprite home positions after layout has finished.
 	await get_tree().process_frame
 
-	_player_sprite_home = player_sprite_label.position
-	_enemy_sprite_home = enemy_sprite_label.position
+	_player_sprite_home = player_sprite.position
+	_enemy_sprite_home = enemy_sprite.position
 
 
 func _exit_tree() -> void:
@@ -194,9 +207,10 @@ func _exit_tree() -> void:
 ## Applies saved player creature/color/name information.
 func _setup_player_character() -> void:
 	player_character_type = SaveManager.get_character_type()
+	player_max_hp = SaveManager.get_max_hp()
 
-	player_sprite_label.text = PlayerDataScript.get_emoji(
-		player_character_type
+	player_sprite.texture = SeaLowAtlasScript.get_character_texture(
+		PlayerDataScript.get_atlas_cell(player_character_type)
 	)
 
 	var player_name: String = SaveManager.get_player_name()
@@ -220,11 +234,36 @@ func _setup_player_character() -> void:
 	)
 
 
+## Resolves the player's selected opponent (see Enemy Select) through
+## EnemyData and applies its sprite, HP, name, and depth background. Replaces
+## the old hardcoded "always fight the Crab" setup.
+func _setup_enemy() -> void:
+	enemy_key = SaveManager.get_selected_enemy()
+	enemy_data = EnemyDataScript.get_enemy(enemy_key)
+
+	# Defensive fallback in case of a corrupted/unknown save value.
+	if enemy_data.is_empty():
+		enemy_key = EnemyDataScript.get_first_enemy_key()
+		enemy_data = EnemyDataScript.get_enemy(enemy_key)
+
+	enemy_max_hp = int(enemy_data["max_hp"])
+
+	enemy_sprite.texture = SeaLowAtlasScript.get_character_texture(
+		enemy_data["atlas"]
+	)
+
+	enemy_name_label.text = String(enemy_data["display_name"]).to_upper()
+
+	depth_background.texture = SeaLowAtlasScript.get_background_texture(
+		EnemyDataScript.get_background_cell(String(enemy_data["depth"]))
+	)
+
+
 func start_battle() -> void:
 	state = BattleState.PLAYER_TURN
 
-	player_hp = PLAYER_MAX_HP
-	crab_hp = CRAB_MAX_HP
+	player_hp = player_max_hp
+	enemy_hp = enemy_max_hp
 
 	victory_reward_given = false
 
@@ -244,26 +283,26 @@ func start_battle() -> void:
 	rules_panel.visible = false
 	run_confirm_panel.visible = false
 
-	crab_damage_label.visible = false
-	octo_damage_label.visible = false
+	enemy_damage_label.visible = false
+	player_damage_label.visible = false
 
 	player_dice_row.visible = false
-	crab_dice_row.visible = false
+	enemy_dice_row.visible = false
 
 	for die in player_dice:
 		die.set_value(1)
 
-	for die in crab_dice:
+	for die in enemy_dice:
 		die.set_value(1)
 
 	for child in log_list.get_children():
 		child.queue_free()
 
-	octo_hp_bar.max_value = PLAYER_MAX_HP
-	crab_hp_bar.max_value = CRAB_MAX_HP
+	player_hp_bar.max_value = player_max_hp
+	enemy_hp_bar.max_value = enemy_max_hp
 
-	octo_hp_bar.value = PLAYER_MAX_HP
-	crab_hp_bar.value = CRAB_MAX_HP
+	player_hp_bar.value = player_max_hp
+	enemy_hp_bar.value = enemy_max_hp
 
 	turn_banner.text = "Tap ROLL to begin"
 
@@ -271,14 +310,14 @@ func start_battle() -> void:
 
 
 func update_ui() -> void:
-	octo_hp_label.text = "HP %d / %d" % [
+	player_hp_label.text = "HP %d / %d" % [
 		player_hp,
-		PLAYER_MAX_HP,
+		player_max_hp,
 	]
 
-	crab_hp_label.text = "HP %d / %d" % [
-		crab_hp,
-		CRAB_MAX_HP,
+	enemy_hp_label.text = "HP %d / %d" % [
+		enemy_hp,
+		enemy_max_hp,
 	]
 
 	var in_player_turn: bool = (
@@ -365,7 +404,7 @@ func _on_item_pressed() -> void:
 
 	var disabled_reasons: Dictionary = {}
 
-	if player_hp >= PLAYER_MAX_HP:
+	if player_hp >= player_max_hp:
 		disabled_reasons["mermaid_scale"] = "HP FULL"
 
 	if trident_armed:
@@ -404,7 +443,7 @@ func _on_item_used(item_key: String) -> void:
 
 
 func _use_mermaid_scale() -> void:
-	if player_hp >= PLAYER_MAX_HP:
+	if player_hp >= player_max_hp:
 		return
 
 	if not SaveManager.consume_item("mermaid_scale"):
@@ -412,7 +451,7 @@ func _use_mermaid_scale() -> void:
 
 	var healed_hp: int = ItemEffectsScript.apply_heal(
 		player_hp,
-		PLAYER_MAX_HP
+		player_max_hp
 	)
 
 	var healed_amount: int = healed_hp - player_hp
@@ -420,7 +459,7 @@ func _use_mermaid_scale() -> void:
 	player_hp = healed_hp
 
 	_animate_hp_bar(
-		octo_hp_bar,
+		player_hp_bar,
 		player_hp
 	)
 
@@ -490,11 +529,14 @@ func _log_system_note(text: String) -> void:
 func perform_round() -> void:
 	state = BattleState.PLAYER_ROLLING
 
-	crab_dice_row.visible = false
+	enemy_dice_row.visible = false
 
 	_set_turn_banner(
-		"🐙 %s IS ROLLING"
-		% SaveManager.get_player_name().to_upper()
+		"%s %s IS ROLLING"
+		% [
+			PlayerDataScript.get_emoji(player_character_type),
+			SaveManager.get_player_name().to_upper(),
+		]
 	)
 
 	update_ui()
@@ -516,15 +558,15 @@ func perform_round() -> void:
 	state = BattleState.ENEMY_ROLLING
 
 	_set_turn_banner(
-		"🦀 CRAB IS ROLLING"
+		"%s IS ROLLING" % String(enemy_data.get("display_name", "ENEMY")).to_upper()
 	)
 
 	update_ui()
 
 	var crab_hand: DiceRules.DiceHand = await _roll_and_animate(
-		crab_dice_row,
-		crab_dice,
-		CRAB_DICE_COUNT
+		enemy_dice_row,
+		enemy_dice,
+		ENEMY_DICE_COUNT
 	)
 
 	if exiting_scene or not is_inside_tree():
@@ -732,7 +774,7 @@ func _resolve_round(
 	_set_turn_banner(
 		"%s!\n%s\n-%d HP%s"
 		% [
-			"YOU WIN" if player_won else "CRAB WINS",
+			"YOU WIN" if player_won else "%s WINS" % String(enemy_data.get("display_name", "ENEMY")).to_upper(),
 			result_type_label,
 			damage,
 			trident_tag,
@@ -758,8 +800,8 @@ func _resolve_round(
 
 	if player_won:
 		await _play_attack_animation(
-			player_sprite_label,
-			enemy_sprite_label,
+			player_sprite,
+			enemy_sprite,
 			_player_sprite_home,
 			_enemy_sprite_home
 		)
@@ -767,11 +809,11 @@ func _resolve_round(
 		if exiting_scene or not is_inside_tree():
 			return
 
-		apply_damage_to_crab(
+		apply_damage_to_enemy(
 			damage
 		)
 
-		if crab_hp <= 0:
+		if enemy_hp <= 0:
 			await get_tree().create_timer(
 				0.6
 			).timeout
@@ -785,8 +827,8 @@ func _resolve_round(
 
 	else:
 		await _play_attack_animation(
-			enemy_sprite_label,
-			player_sprite_label,
+			enemy_sprite,
+			player_sprite,
 			_enemy_sprite_home,
 			_player_sprite_home
 		)
@@ -909,8 +951,8 @@ func _on_decline_seaweed_pressed() -> void:
 ## ------------------------------------------------------------------
 
 func _play_attack_animation(
-	attacker: Label,
-	defender: Label,
+	attacker: Control,
+	defender: Control,
 	attacker_home: Vector2,
 	defender_home: Vector2
 ) -> void:
@@ -1050,14 +1092,18 @@ func _render_log_entry(
 			player_character_type
 		)
 
-		var winner_emoji: String = (
+		var enemy_name: String = String(
+			enemy_data.get("display_name", "Enemy")
+		)
+
+		var winner_name: String = (
 			player_emoji
 			if entry["player_won"]
-			else "🦀"
+			else enemy_name
 		)
 
 		var loser_name: String = (
-			"Crab"
+			enemy_name
 			if entry["player_won"]
 			else SaveManager.get_player_name()
 		)
@@ -1072,7 +1118,7 @@ func _render_log_entry(
 			"R%d: %s won with %s%s   %s -%d HP"
 			% [
 				entry["round"],
-				winner_emoji,
+				winner_name,
 				entry["result_type_label"],
 				trident_suffix,
 				loser_name,
@@ -1112,30 +1158,30 @@ func _start_next_round() -> void:
 	state = BattleState.PLAYER_TURN
 
 	player_dice_row.visible = false
-	crab_dice_row.visible = false
+	enemy_dice_row.visible = false
 
 	turn_banner.text = "Tap ROLL to begin"
 
 	update_ui()
 
 
-func apply_damage_to_crab(
+func apply_damage_to_enemy(
 	amount: int
 ) -> void:
-	crab_hp = maxi(
+	enemy_hp = maxi(
 		0,
-		crab_hp - amount
+		enemy_hp - amount
 	)
 
 	update_ui()
 
 	_animate_hp_bar(
-		crab_hp_bar,
-		crab_hp
+		enemy_hp_bar,
+		enemy_hp
 	)
 
 	_show_floating_damage(
-		crab_damage_label,
+		enemy_damage_label,
 		amount
 	)
 
@@ -1151,12 +1197,12 @@ func apply_damage_to_player(
 	update_ui()
 
 	_animate_hp_bar(
-		octo_hp_bar,
+		player_hp_bar,
 		player_hp
 	)
 
 	_show_floating_damage(
-		octo_damage_label,
+		player_damage_label,
 		amount
 	)
 
@@ -1203,6 +1249,11 @@ func show_victory() -> void:
 	_award_victory_shells()
 
 	SaveManager.register_battle_win()
+
+	## Mark this enemy as beaten and unlock the next one in the progression.
+	## Previously beaten enemies are unaffected, and no enemy is ever
+	## unlocked more than one step ahead.
+	SaveManager.register_enemy_defeat(enemy_key)
 
 	victory_panel.visible = true
 

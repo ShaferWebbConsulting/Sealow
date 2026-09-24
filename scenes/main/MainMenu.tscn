@@ -80,7 +80,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(176, 176)
 layout_mode = 2
 
-[node name="Octo" type="Label" parent="SafeArea/Content/CharacterPreview/PreviewBody" unique_id=374372413]
+[node name="Octo" type="TextureRect" parent="SafeArea/Content/CharacterPreview/PreviewBody" unique_id=374372413]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -88,10 +88,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/font_size = 104
-text = "🐙"
-horizontal_alignment = 1
-vertical_alignment = 1
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Name" type="Button" parent="SafeArea/Content" unique_id=10025121]
 unique_name_in_owner = true

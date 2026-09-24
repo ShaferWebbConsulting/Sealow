@@ -5,6 +5,7 @@ const MAIN_MENU_SCENE: String = "res://scenes/main/MainMenu.tscn"
 const BATTLE_SCENE: String = "res://scenes/battle/Battle.tscn"
 const CHARACTER_SELECT_SCENE: String = "res://scenes/character_select/CharacterSelect.tscn"
 const SHOP_SCENE: String = "res://scenes/shop/Shop.tscn"
+const ENEMY_SELECT_SCENE: String = "res://scenes/enemy_select/EnemySelect.tscn"
 
 func go_to_startup() -> void:
 	get_tree().change_scene_to_file(STARTUP_SCENE)
@@ -20,3 +21,6 @@ func go_to_character_select() -> void:
 
 func go_to_shop() -> void:
 	get_tree().change_scene_to_file(SHOP_SCENE)
+
+func go_to_enemy_select() -> void:
+	get_tree().change_scene_to_file(ENEMY_SELECT_SCENE)

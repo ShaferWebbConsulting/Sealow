@@ -1,6 +1,7 @@
 extends Control
 
 const PlayerDataScript = preload("res://scripts/player/player_data.gd")
+const SeaLowAtlasScript = preload("res://scripts/assets/sea_low_atlas.gd")
 
 @onready var dive_button: Button = %DiveButton
 @onready var shop_button: Button = %ShopButton
@@ -10,7 +11,7 @@ const PlayerDataScript = preload("res://scripts/player/player_data.gd")
 @onready var settings_back_button: Button = %SettingsBackButton
 
 @onready var shells_label: Label = %Shells
-@onready var character_emoji_label: Label = %Octo
+@onready var character_emoji_label: TextureRect = %Octo
 @onready var player_name_button: Button = %Name
 @onready var character_preview_body: Panel = %PreviewBody
 
@@ -57,7 +58,9 @@ func update_player_ui() -> void:
 	var player_name: String = SaveManager.get_player_name()
 	var creature_name: String = PlayerDataScript.get_display_name(character_type)
 
-	character_emoji_label.text = PlayerDataScript.get_emoji(character_type)
+	character_emoji_label.texture = SeaLowAtlasScript.get_character_texture(
+		PlayerDataScript.get_atlas_cell(character_type)
+	)
 
 	# The player's custom name is shown first.
 	# The creature type and level appear below it.
@@ -82,7 +85,7 @@ func update_player_ui() -> void:
 
 
 func _on_dive_pressed() -> void:
-	SceneManager.go_to_battle()
+	SceneManager.go_to_enemy_select()
 
 
 func _on_shop_pressed() -> void:

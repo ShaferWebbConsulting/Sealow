@@ -56,13 +56,22 @@ func _build_row(item: ItemData, count: int, disabled_reason: String) -> Control:
 	row.add_theme_constant_override("separation", 12)
 	panel.add_child(row)
 
+	var icon_texture: AtlasTexture = ItemData.get_atlas_texture(item.id)
+	if icon_texture != null:
+		var icon: TextureRect = TextureRect.new()
+		icon.texture = icon_texture
+		icon.custom_minimum_size = Vector2(44, 44)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(icon)
+
 	var info_box: VBoxContainer = VBoxContainer.new()
 	info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(info_box)
 
 	var title: Label = Label.new()
 	var count_suffix: String = " (x%d)" % count if count > 0 else " (none left)"
-	title.text = "%s %s%s" % [item.icon, item.display_name, count_suffix]
+	title.text = "%s%s" % [item.display_name, count_suffix] if icon_texture != null else "%s %s%s" % [item.icon, item.display_name, count_suffix]
 	title.add_theme_font_size_override("font_size", 20)
 	info_box.add_child(title)
 
