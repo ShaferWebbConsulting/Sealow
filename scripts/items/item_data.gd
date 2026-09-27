@@ -4,6 +4,8 @@ class_name ItemData
 ## add an enum entry + catalog entry here rather than hardcoding item logic
 ## in battle_manager.gd. Actual gameplay effects live in item_effects.gd.
 
+const SeaLowAtlasScript = preload("res://scripts/assets/sea_low_atlas.gd")
+
 enum ItemId {
 	TURTLE_SHIELD,
 	TRIDENT,
@@ -13,6 +15,15 @@ enum ItemId {
 
 ## MVP shop pricing: every item costs exactly 1 shell.
 const SHOP_COST_SHELLS: int = 1
+
+## charactersList.png atlas cells (Row 5 — item-only cells) for the items
+## that have real art. Circle of Seaweed has no dedicated atlas cell yet, so
+## it intentionally keeps its emoji icon (see get_atlas_texture()).
+const ITEM_ATLAS_CELLS: Dictionary = {
+	"trident": Vector2i(2, 4),
+	"turtle_shield": Vector2i(3, 4),
+	"mermaid_scale": Vector2i(4, 4),
+}
 
 @export var id: int = ItemId.TURTLE_SHIELD
 @export var display_name: String = ""
@@ -52,6 +63,16 @@ static func key_to_id(key: String) -> int:
 		"seaweed_circle":
 			return ItemId.SEAWEED_CIRCLE
 	return -1
+
+
+## Returns the charactersList.png atlas icon for `item_id`, or null if that
+## item doesn't have dedicated art yet (in which case callers should fall
+## back to the emoji `icon` field instead).
+static func get_atlas_texture(item_id: int) -> AtlasTexture:
+	var key: String = id_to_key(item_id)
+	if not ITEM_ATLAS_CELLS.has(key):
+		return null
+	return SeaLowAtlasScript.get_character_texture(ITEM_ATLAS_CELLS[key])
 
 
 ## The full list of items the game currently knows about. Purchasable-with-

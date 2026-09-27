@@ -21,7 +21,7 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if _battle == null:
 		return
-	if _battle.player_hp <= 0 or _battle.crab_hp <= 0:
+	if _battle.player_hp <= 0 or _battle.enemy_hp <= 0:
 		_finish()
 		return
 	if _rounds_triggered >= MAX_ROUNDS:
@@ -29,13 +29,13 @@ func _process(_delta: float) -> void:
 		return
 	if _battle.state == _battle.BattleState.PLAYER_TURN:
 		_rounds_triggered += 1
-		print("Triggering round %d (player_hp=%d crab_hp=%d)" % [_rounds_triggered, _battle.player_hp, _battle.crab_hp])
+		print("Triggering round %d (player_hp=%d enemy_hp=%d)" % [_rounds_triggered, _battle.player_hp, _battle.enemy_hp])
 		_battle.perform_round()
 
 
 func _finish() -> void:
-	print("DONE: player_hp=%d crab_hp=%d rounds_triggered=%d log_entries=%d" % [
-		_battle.player_hp, _battle.crab_hp, _rounds_triggered, _battle.battle_log.size(),
+	print("DONE: player_hp=%d enemy_hp=%d rounds_triggered=%d log_entries=%d" % [
+		_battle.player_hp, _battle.enemy_hp, _rounds_triggered, _battle.battle_log.size(),
 	])
 	for entry in _battle.battle_log:
 		print(entry)

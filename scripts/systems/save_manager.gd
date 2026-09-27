@@ -8,6 +8,7 @@ extends Node
 ## the main menu, character select, etc. should never store a duplicate.
 
 const PlayerDataScript = preload("res://scripts/player/player_data.gd")
+const EnemyDataScript = preload("res://scripts/enemies/enemy_data.gd")
 
 const SAVE_PATH: String = "user://sealow_save.json"
 
@@ -199,4 +200,81 @@ func set_player_name(player_name: String) -> void:
 		cleaned_name = "Diver"
 
 	data["player_name"] = cleaned_name
+	save_game()
+
+
+## ------------------------------------------------------------------
+## Persistent max HP (Shop upgrade)
+## ------------------------------------------------------------------
+
+func get_max_hp() -> int:
+	return int(data.get("max_hp", 12))
+
+
+## Permanent max-HP purchase: spends `cost` shells (default 5) for +1 max HP,
+## persisting immediately. Returns true on success, false (no state changed)
+## if the player can't afford it. Purchased HP is never reset by battles.
+func buy_hp_upgrade(cost: int = 5) -> bool:
+	if int(data.get("shells", 0)) < cost:
+		return false
+
+	data["shells"] = int(data.get("shells", 0)) - cost
+	data["max_hp"] = int(data.get("max_hp", 12)) + 1
+
+	save_game()
+	return true
+
+
+## ------------------------------------------------------------------
+## Enemy progression
+## ------------------------------------------------------------------
+
+func get_selected_enemy() -> String:
+	return String(data.get("selected_enemy", EnemyDataScript.get_first_enemy_key()))
+
+
+## Persists the enemy the player picked on the Enemy Select screen so it
+## survives scene changes and app restarts.
+func set_selected_enemy(enemy_key: String) -> void:
+	data["selected_enemy"] = enemy_key
+	save_game()
+
+
+func get_unlocked_enemies() -> Array:
+	return (data.get("unlocked_enemies", []) as Array).duplicate()
+
+
+func get_beaten_enemies() -> Array:
+	return (data.get("beaten_enemies", []) as Array).duplicate()
+
+
+func is_enemy_unlocked(enemy_key: String) -> bool:
+	return (data.get("unlocked_enemies", []) as Array).has(enemy_key)
+
+
+func is_enemy_beaten(enemy_key: String) -> bool:
+	return (data.get("beaten_enemies", []) as Array).has(enemy_key)
+
+
+## Records a defeat of `enemy_key`:
+## 1. marks it beaten (idempotent — replaying an already-beaten enemy is
+##    always allowed and never regresses progress)
+## 2. unlocks the next enemy in EnemyData.PROGRESSION_ORDER, if any
+## 3. persists immediately
+##
+## Beaten enemies stay beaten forever; this never unlocks more than one new
+## enemy at a time, and never skips ahead.
+func register_enemy_defeat(enemy_key: String) -> void:
+	var beaten: Array = data.get("beaten_enemies", [])
+	if not beaten.has(enemy_key):
+		beaten.append(enemy_key)
+	data["beaten_enemies"] = beaten
+
+	var next_key: String = EnemyDataScript.get_next_enemy_key(enemy_key)
+	if not next_key.is_empty():
+		var unlocked: Array = data.get("unlocked_enemies", [])
+		if not unlocked.has(next_key):
+			unlocked.append(next_key)
+		data["unlocked_enemies"] = unlocked
+
 	save_game()

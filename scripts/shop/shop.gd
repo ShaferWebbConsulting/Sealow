@@ -4,15 +4,19 @@ extends Control
 ## simplification, not a placeholder bug. No real-money purchases; shells are
 ## only ever earned by winning battles.
 
+const HP_UPGRADE_COST: int = 5
 
 @onready var shells_label: Label = %ShellsLabel
 @onready var list_vbox: VBoxContainer = %ListVBox
 @onready var back_button: Button = %BackButton
 @onready var message_label: Label = %MessageLabel
+@onready var max_hp_label: Label = %MaxHpLabel
+@onready var buy_hp_button: Button = %BuyHpButton
 
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
+	buy_hp_button.pressed.connect(_on_buy_hp_pressed)
 	message_label.visible = false
 	_refresh()
 
@@ -23,12 +27,27 @@ func _on_back_pressed() -> void:
 
 func _refresh() -> void:
 	shells_label.text = "🐚 %d Shells" % SaveManager.player_shells
+
+	max_hp_label.text = "❤️ MAX HP: %d" % SaveManager.get_max_hp()
+	buy_hp_button.text = "+1 HP — %d 🐚" % HP_UPGRADE_COST
+	buy_hp_button.disabled = SaveManager.player_shells < HP_UPGRADE_COST
+
 	_clear_rows()
 	var inventory: Dictionary = SaveManager.get_inventory()
 	for item in ItemData.get_catalog():
 		var key: String = ItemData.id_to_key(item.id)
 		var owned: int = int(inventory.get(key, 0))
 		list_vbox.add_child(_build_row(item, key, owned))
+
+
+## Permanent max-HP purchase: SaveManager.buy_hp_upgrade() atomically checks
+## affordability, spends the shells, and persists immediately.
+func _on_buy_hp_pressed() -> void:
+	if SaveManager.buy_hp_upgrade(HP_UPGRADE_COST):
+		_show_message("Max HP increased!")
+		_refresh()
+	else:
+		_show_message("Not enough shells")
 
 
 func _clear_rows() -> void:
@@ -51,12 +70,21 @@ func _build_row(item: ItemData, key: String, owned: int) -> Control:
 	row.add_theme_constant_override("separation", 14)
 	panel.add_child(row)
 
+	var icon_texture: AtlasTexture = ItemData.get_atlas_texture(item.id)
+	if icon_texture != null:
+		var icon: TextureRect = TextureRect.new()
+		icon.texture = icon_texture
+		icon.custom_minimum_size = Vector2(48, 48)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(icon)
+
 	var info_box: VBoxContainer = VBoxContainer.new()
 	info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(info_box)
 
 	var title: Label = Label.new()
-	title.text = "%s %s" % [item.icon, item.display_name.to_upper()]
+	title.text = item.display_name.to_upper() if icon_texture != null else "%s %s" % [item.icon, item.display_name.to_upper()]
 	title.add_theme_font_size_override("font_size", 22)
 	info_box.add_child(title)
 

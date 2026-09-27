@@ -12,6 +12,7 @@ extends Control
 ## Saves everything through SaveManager and continues to Main Menu.
 
 const PlayerDataScript = preload("res://scripts/player/player_data.gd")
+const SeaLowAtlasScript = preload("res://scripts/assets/sea_low_atlas.gd")
 
 @onready var step1: Control = %Step1
 @onready var step2: Control = %Step2
@@ -20,7 +21,7 @@ const PlayerDataScript = preload("res://scripts/player/player_data.gd")
 @onready var next_button: Button = %NextButton
 
 @onready var preview_body: Panel = %PreviewBody
-@onready var preview_emoji: Label = %PreviewEmoji
+@onready var preview_emoji: TextureRect = %PreviewEmoji
 @onready var color_grid: GridContainer = %ColorGrid
 
 @onready var name_input: LineEdit = %NameInput
@@ -62,14 +63,17 @@ func _build_creature_buttons() -> void:
 	for creature_key in PlayerDataScript.CHARACTER_ORDER:
 		var button: Button = Button.new()
 
-		button.text = "%s\n%s" % [
-			PlayerDataScript.get_emoji(creature_key),
-			PlayerDataScript.get_display_name(creature_key),
-		]
+		button.text = PlayerDataScript.get_display_name(creature_key)
+		button.icon = SeaLowAtlasScript.get_character_texture(
+			PlayerDataScript.get_atlas_cell(creature_key)
+		)
+		button.expand_icon = true
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 
 		button.custom_minimum_size = Vector2(180, 160)
 		button.toggle_mode = true
-		button.add_theme_font_size_override("font_size", 30)
+		button.add_theme_font_size_override("font_size", 20)
 
 		button.pressed.connect(
 			_on_creature_selected.bind(creature_key)
@@ -178,8 +182,8 @@ func _update_start_button() -> void:
 
 
 func _update_preview() -> void:
-	preview_emoji.text = PlayerDataScript.get_emoji(
-		_selected_creature
+	preview_emoji.texture = SeaLowAtlasScript.get_character_texture(
+		PlayerDataScript.get_atlas_cell(_selected_creature)
 	)
 
 	var style: StyleBoxFlat = StyleBoxFlat.new()
