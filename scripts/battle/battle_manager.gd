@@ -28,8 +28,8 @@ const ATTACK_RETURN_DURATION: float = 0.18
 
 ## Explicit interaction states. The main action button (RollButton) changes
 ## label per state and is only enabled in the "waiting for the player" states:
-## PLAYER_TURN (ROLL), PLAYER_RESULT (CONTINUE), ENEMY_RESULT (CONTINUE) and
-## WAITING_FOR_NEXT_ROUND (NEXT ROUND). Every handler changes state
+## PLAYER_TURN (ROLL) and WAITING_FOR_NEXT_ROUND (CONTINUE). One ROLL press
+## runs the player roll, the enemy roll and the resolution automatically. Every handler changes state
 ## synchronously before awaiting, so a double tap can never fire twice.
 ## Only PLAYER_TURN allows ITEM / RUN.
 enum BattleState {
@@ -340,18 +340,14 @@ func update_ui() -> void:
 	match state:
 		BattleState.PLAYER_TURN:
 			main_label = "ROLL"
-		BattleState.PLAYER_RESULT, BattleState.ENEMY_RESULT:
-			main_label = "CONTINUE"
 		BattleState.WAITING_FOR_NEXT_ROUND:
-			main_label = "NEXT ROUND"
+			main_label = "CONTINUE"
 		_:
 			main_label = roll_button.text
 
 	roll_button.text = main_label
 	roll_button.disabled = not (
 		in_player_turn
-		or state == BattleState.PLAYER_RESULT
-		or state == BattleState.ENEMY_RESULT
 		or state == BattleState.WAITING_FOR_NEXT_ROUND
 	)
 	item_button.disabled = not in_player_turn
@@ -393,10 +389,6 @@ func _on_roll_pressed() -> void:
 	match state:
 		BattleState.PLAYER_TURN:
 			perform_round()
-		BattleState.PLAYER_RESULT:
-			_start_enemy_roll()
-		BattleState.ENEMY_RESULT:
-			_resolve_round(_player_hand, _enemy_hand)
 		BattleState.WAITING_FOR_NEXT_ROUND:
 			_start_next_round()
 
@@ -582,19 +574,6 @@ func perform_round() -> void:
 	if exiting_scene or not is_inside_tree():
 		return
 
-	state = BattleState.PLAYER_RESULT
-
-	_set_turn_banner(
-		"YOUR ROLL\n%s" % _player_hand.display_name
-	)
-
-	update_ui()
-
-
-func _start_enemy_roll() -> void:
-	if state != BattleState.PLAYER_RESULT:
-		return
-
 	state = BattleState.ENEMY_ROLLING
 
 	_set_turn_banner("%s ROLL" % _enemy_display_name())
@@ -612,14 +591,7 @@ func _start_enemy_roll() -> void:
 
 	state = BattleState.ENEMY_RESULT
 
-	_set_turn_banner(
-		"%s ROLL\n%s" % [
-			_enemy_display_name(),
-			_enemy_hand.display_name,
-		]
-	)
-
-	update_ui()
+	await _resolve_round(_player_hand, _enemy_hand)
 
 
 func _enemy_display_name() -> String:

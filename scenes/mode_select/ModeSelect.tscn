@@ -29,9 +29,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
+theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 60
-theme_override_constants/margin_right = 24
+theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 32
 
 [node name="VBox" type="VBoxContainer" parent="SafeArea"]
@@ -44,45 +44,29 @@ theme_override_font_sizes/font_size = 40
 text = "CHOOSE MODE"
 horizontal_alignment = 1
 
-[node name="Spacer" type="Control" parent="SafeArea/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
 
-[node name="StoryDescription" type="Label" parent="SafeArea/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Fight enemies in order. Beat one to unlock the next."
-horizontal_alignment = 1
-autowrap_mode = 3
 
 [node name="StoryButton" type="Button" parent="SafeArea/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 340)
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_font_sizes/font_size = 32
 text = "STORY MODE"
 
-[node name="FreeDescription" type="Label" parent="SafeArea/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Every enemy unlocked. Does not change Story progress."
-horizontal_alignment = 1
-autowrap_mode = 3
 
 [node name="FreeForAllButton" type="Button" parent="SafeArea/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 340)
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_font_sizes/font_size = 32
 text = "FREE FOR ALL"
 
-[node name="Spacer2" type="Control" parent="SafeArea/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
 
 [node name="BackButton" type="Button" parent="SafeArea/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 28
 text = "← BACK"

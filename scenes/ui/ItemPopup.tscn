@@ -36,17 +36,21 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0117647, 0.0470588, 0.0784314, 0.85)
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Center" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 32
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(560, 0)
 layout_mode = 2
+size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_popup")
 
 [node name="VBox" type="VBoxContainer" parent="Center/Panel"]
@@ -56,7 +60,7 @@ theme_override_constants/separation = 14
 [node name="Title" type="Label" parent="Center/Panel/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 36
 text = "ITEMS"
 horizontal_alignment = 1
 
@@ -69,5 +73,5 @@ theme_override_constants/separation = 10
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 26
 text = "CLOSE"

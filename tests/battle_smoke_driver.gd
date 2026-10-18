@@ -32,11 +32,7 @@ func _process(_delta: float) -> void:
 		_rounds_triggered += 1
 		print("Triggering round %d (player_hp=%d enemy_hp=%d)" % [_rounds_triggered, _battle.player_hp, _battle.enemy_hp])
 		_battle._on_roll_pressed()
-	elif (
-		st == _battle.BattleState.PLAYER_RESULT
-		or st == _battle.BattleState.ENEMY_RESULT
-		or st == _battle.BattleState.WAITING_FOR_NEXT_ROUND
-	):
+	elif st == _battle.BattleState.WAITING_FOR_NEXT_ROUND:
 		_battle._on_roll_pressed()
 
 

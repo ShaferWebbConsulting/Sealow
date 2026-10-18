@@ -50,9 +50,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 28
+theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 64
-theme_override_constants/margin_right = 28
+theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 40
 
 [node name="VBox" type="VBoxContainer" parent="SafeArea"]
@@ -62,13 +62,13 @@ theme_override_constants/separation = 16
 [node name="Title" type="Label" parent="SafeArea/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 40
 text = "🛒 SHOP"
 horizontal_alignment = 1
 
 [node name="ShellsPanel" type="PanelContainer" parent="SafeArea/VBox"]
 layout_mode = 2
-size_flags_horizontal = 4
+size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_shells")
 
 [node name="ShellsLabel" type="Label" parent="SafeArea/VBox/ShellsPanel"]
@@ -81,7 +81,7 @@ horizontal_alignment = 1
 
 [node name="HpUpgradePanel" type="PanelContainer" parent="SafeArea/VBox"]
 layout_mode = 2
-size_flags_horizontal = 4
+size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_shells")
 
 [node name="HBox" type="HBoxContainer" parent="SafeArea/VBox/HpUpgradePanel"]
@@ -92,22 +92,22 @@ theme_override_constants/separation = 14
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 26
 text = "❤️ MAX HP: 12"
 vertical_alignment = 1
 
 [node name="BuyHpButton" type="Button" parent="SafeArea/VBox/HpUpgradePanel/HBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(140, 56)
+custom_minimum_size = Vector2(200, 64)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 24
 text = "+1 HP — 5 🐚"
 
 [node name="MessageLabel" type="Label" parent="SafeArea/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.941176, 0.760784, 0.239216, 1)
 text = "Not enough shells"
 horizontal_alignment = 1

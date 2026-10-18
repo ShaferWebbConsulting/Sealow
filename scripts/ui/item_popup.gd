@@ -48,8 +48,8 @@ func _build_row(item: ItemData, count: int, disabled_reason: String) -> Control:
 	style.set_corner_radius_all(14)
 	style.content_margin_left = 14.0
 	style.content_margin_right = 14.0
-	style.content_margin_top = 10.0
-	style.content_margin_bottom = 10.0
+	style.content_margin_top = 16.0
+	style.content_margin_bottom = 16.0
 	panel.add_theme_stylebox_override("panel", style)
 
 	var row: HBoxContainer = HBoxContainer.new()
@@ -60,7 +60,7 @@ func _build_row(item: ItemData, count: int, disabled_reason: String) -> Control:
 	if icon_texture != null:
 		var icon: TextureRect = TextureRect.new()
 		icon.texture = icon_texture
-		icon.custom_minimum_size = Vector2(44, 44)
+		icon.custom_minimum_size = Vector2(64, 64)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		row.add_child(icon)
@@ -72,19 +72,29 @@ func _build_row(item: ItemData, count: int, disabled_reason: String) -> Control:
 	var title: Label = Label.new()
 	var count_suffix: String = " (x%d)" % count if count > 0 else " (none left)"
 	title.text = "%s%s" % [item.display_name, count_suffix] if icon_texture != null else "%s %s%s" % [item.icon, item.display_name, count_suffix]
-	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_font_size_override("font_size", 28)
 	info_box.add_child(title)
 
 	var desc: Label = Label.new()
-	desc.text = item.description if disabled_reason.is_empty() else "%s (%s)" % [item.description, disabled_reason]
+	desc.text = item.description if disabled_reason.is_empty() else item.description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 18)
+	desc.add_theme_font_size_override("font_size", 20)
 	desc.add_theme_color_override("font_color", Color(0.68, 0.73, 0.74, 1.0))
 	info_box.add_child(desc)
 
+	if not disabled_reason.is_empty():
+		desc.text = item.description
+		var reason: Label = Label.new()
+		reason.text = disabled_reason
+		reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		reason.add_theme_font_size_override("font_size", 20)
+		reason.add_theme_color_override("font_color", Color(0.94, 0.76, 0.24, 1))
+		info_box.add_child(reason)
+
 	var use_button: Button = Button.new()
 	use_button.text = "USE"
-	use_button.custom_minimum_size = Vector2(96, 64)
+	use_button.custom_minimum_size = Vector2(120, 64)
+	use_button.add_theme_font_size_override("font_size", 26)
 	# Disable when the player has none left, or the caller marked it unusable
 	# right now (e.g. Mermaid Scale at full HP), so it can never be wasted.
 	use_button.disabled = count <= 0 or not disabled_reason.is_empty()

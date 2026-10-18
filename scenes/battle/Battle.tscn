@@ -136,9 +136,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
+theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 48
-theme_override_constants/margin_right = 24
+theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 24
 
 [node name="MainVBox" type="VBoxContainer" parent="SafeArea"]
@@ -200,15 +200,20 @@ theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
 text = "HP 10 / 10"
 
 [node name="EnemySpriteHolder" type="Control" parent="SafeArea/MainVBox"]
-custom_minimum_size = Vector2(0, 140)
+custom_minimum_size = Vector2(0, 170)
+size_flags_vertical = 3
 layout_mode = 2
 
 [node name="EnemySprite" type="TextureRect" parent="SafeArea/MainVBox/EnemySpriteHolder"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
+anchor_left = 0.0
+anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 8.0
+offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
@@ -251,17 +256,17 @@ visible = false
 
 [node name="EnemyDie1" parent="SafeArea/MainVBox/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(104, 104)
 layout_mode = 2
 
 [node name="EnemyDie2" parent="SafeArea/MainVBox/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(104, 104)
 layout_mode = 2
 
 [node name="EnemyDie3" parent="SafeArea/MainVBox/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(104, 104)
 layout_mode = 2
 
 [node name="PlayerRollArea" type="VBoxContainer" parent="SafeArea/MainVBox"]
@@ -286,29 +291,34 @@ visible = false
 
 [node name="PlayerDie1" parent="SafeArea/MainVBox/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(104, 104)
 layout_mode = 2
 
 [node name="PlayerDie2" parent="SafeArea/MainVBox/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(104, 104)
 layout_mode = 2
 
 [node name="PlayerDie3" parent="SafeArea/MainVBox/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(104, 104)
 layout_mode = 2
 
 [node name="PlayerSpriteHolder" type="Control" parent="SafeArea/MainVBox"]
-custom_minimum_size = Vector2(0, 140)
+custom_minimum_size = Vector2(0, 170)
+size_flags_vertical = 3
 layout_mode = 2
 
 [node name="PlayerSprite" type="TextureRect" parent="SafeArea/MainVBox/PlayerSpriteHolder"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
+anchor_left = 0.0
+anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 8.0
+offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
