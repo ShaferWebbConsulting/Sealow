@@ -4,7 +4,7 @@ extends Control
 ## so adding an enemy to EnemyData is enough — no scene editing required.
 ##
 ## Rules (see EnemyData + SaveManager for the actual progression logic):
-## - Only unlocked enemies (SaveManager.is_enemy_unlocked()) are selectable.
+## - Story: only unlocked enemies are selectable. Free For All: every enemy is.
 ## - Beaten enemies stay selectable forever.
 ## - Locked enemies are shown, dimmed, and disabled — never skippable.
 
@@ -13,15 +13,17 @@ const SeaLowAtlasScript = preload("res://scripts/assets/sea_low_atlas.gd")
 
 @onready var enemy_grid: GridContainer = %EnemyGrid
 @onready var back_button: Button = %BackButton
+@onready var mode_label: Label = %ModeLabel
 
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
+	mode_label.text = "FREE FOR ALL" if SaveManager.is_free_for_all() else "STORY MODE"
 	_refresh()
 
 
 func _on_back_pressed() -> void:
-	SceneManager.go_to_main_menu()
+	SceneManager.go_to_mode_select()
 
 
 func _refresh() -> void:
@@ -38,11 +40,12 @@ func _clear_cards() -> void:
 
 
 func _build_card(enemy_key: String, enemy: Dictionary) -> Control:
-	var unlocked: bool = SaveManager.is_enemy_unlocked(enemy_key)
-	var beaten: bool = SaveManager.is_enemy_beaten(enemy_key)
+	var free_for_all: bool = SaveManager.is_free_for_all()
+	var unlocked: bool = SaveManager.is_enemy_selectable(enemy_key)
+	var beaten: bool = SaveManager.is_enemy_beaten(enemy_key) and not free_for_all
 
 	var panel: PanelContainer = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(200, 260)
+	panel.custom_minimum_size = Vector2(0, 320)
 
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.09, 0.18, 0.24, 0.9)
@@ -62,7 +65,7 @@ func _build_card(enemy_key: String, enemy: Dictionary) -> Control:
 	# player can preview what's coming without being able to select it.
 	var icon: TextureRect = TextureRect.new()
 	icon.texture = SeaLowAtlasScript.get_character_texture(enemy["atlas"])
-	icon.custom_minimum_size = Vector2(96, 96)
+	icon.custom_minimum_size = Vector2(112, 112)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.modulate = Color(1, 1, 1, 1) if unlocked else Color(0.35, 0.35, 0.4, 1)
@@ -71,27 +74,27 @@ func _build_card(enemy_key: String, enemy: Dictionary) -> Control:
 	var name_label: Label = Label.new()
 	name_label.text = String(enemy["display_name"]).to_upper()
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_font_size_override("font_size", 24)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(name_label)
 
 	var hp_label: Label = Label.new()
 	hp_label.text = "❤ %d HP" % int(enemy["max_hp"])
 	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hp_label.add_theme_font_size_override("font_size", 14)
+	hp_label.add_theme_font_size_override("font_size", 20)
 	hp_label.add_theme_color_override("font_color", Color(0.678431, 0.72549, 0.741176, 1))
 	vbox.add_child(hp_label)
 
 	var depth_label: Label = Label.new()
 	depth_label.text = String(enemy["depth"]).replace("_", " ").to_upper()
 	depth_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	depth_label.add_theme_font_size_override("font_size", 12)
+	depth_label.add_theme_font_size_override("font_size", 18)
 	depth_label.add_theme_color_override("font_color", Color(0.34902, 0.784314, 0.698039, 1))
 	vbox.add_child(depth_label)
 
 	var status_label: Label = Label.new()
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	status_label.add_theme_font_size_override("font_size", 13)
+	status_label.add_theme_font_size_override("font_size", 20)
 
 	if not unlocked:
 		status_label.text = "🔒 LOCKED"
@@ -100,14 +103,14 @@ func _build_card(enemy_key: String, enemy: Dictionary) -> Control:
 		status_label.text = "✓ BEATEN"
 		status_label.add_theme_color_override("font_color", Color(0.941176, 0.760784, 0.239216, 1))
 	else:
-		status_label.text = "UNLOCKED"
+		status_label.text = "AVAILABLE"
 		status_label.add_theme_color_override("font_color", Color(0.34902, 0.784314, 0.698039, 1))
 
 	vbox.add_child(status_label)
 
 	var select_button: Button = Button.new()
 	select_button.text = "SELECT"
-	select_button.custom_minimum_size = Vector2(0, 48)
+	select_button.custom_minimum_size = Vector2(0, 64)
 	select_button.disabled = not unlocked
 	select_button.pressed.connect(_on_select_pressed.bind(enemy_key))
 	vbox.add_child(select_button)
@@ -117,7 +120,7 @@ func _build_card(enemy_key: String, enemy: Dictionary) -> Control:
 
 ## Persists the chosen enemy and dives straight into battle against it.
 func _on_select_pressed(enemy_key: String) -> void:
-	if not SaveManager.is_enemy_unlocked(enemy_key):
+	if not SaveManager.is_enemy_selectable(enemy_key):
 		return
 
 	SaveManager.set_selected_enemy(enemy_key)

@@ -85,7 +85,7 @@ func update_player_ui() -> void:
 
 
 func _on_dive_pressed() -> void:
-	SceneManager.go_to_enemy_select()
+	SceneManager.go_to_mode_select()
 
 
 func _on_shop_pressed() -> void:

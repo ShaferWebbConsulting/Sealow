@@ -85,13 +85,13 @@ func _build_row(item: ItemData, key: String, owned: int) -> Control:
 
 	var title: Label = Label.new()
 	title.text = item.display_name.to_upper() if icon_texture != null else "%s %s" % [item.icon, item.display_name.to_upper()]
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 24)
 	info_box.add_child(title)
 
 	var desc: Label = Label.new()
 	desc.text = item.description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 15)
+	desc.add_theme_font_size_override("font_size", 18)
 	desc.add_theme_color_override("font_color", Color(0.68, 0.73, 0.74, 1.0))
 	info_box.add_child(desc)
 

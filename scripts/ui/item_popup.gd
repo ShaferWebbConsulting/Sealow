@@ -72,19 +72,19 @@ func _build_row(item: ItemData, count: int, disabled_reason: String) -> Control:
 	var title: Label = Label.new()
 	var count_suffix: String = " (x%d)" % count if count > 0 else " (none left)"
 	title.text = "%s%s" % [item.display_name, count_suffix] if icon_texture != null else "%s %s%s" % [item.icon, item.display_name, count_suffix]
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_font_size_override("font_size", 24)
 	info_box.add_child(title)
 
 	var desc: Label = Label.new()
 	desc.text = item.description if disabled_reason.is_empty() else "%s (%s)" % [item.description, disabled_reason]
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 15)
+	desc.add_theme_font_size_override("font_size", 18)
 	desc.add_theme_color_override("font_color", Color(0.68, 0.73, 0.74, 1.0))
 	info_box.add_child(desc)
 
 	var use_button: Button = Button.new()
 	use_button.text = "USE"
-	use_button.custom_minimum_size = Vector2(84, 56)
+	use_button.custom_minimum_size = Vector2(96, 64)
 	# Disable when the player has none left, or the caller marked it unusable
 	# right now (e.g. Mermaid Scale at full HP), so it can never be wasted.
 	use_button.disabled = count <= 0 or not disabled_reason.is_empty()

@@ -26,12 +26,20 @@ const ATTACK_SHAKE_DURATION: float = 0.22
 const ATTACK_RETURN_DURATION: float = 0.18
 
 
-## Only BattleState.PLAYER_TURN allows normal player interaction.
+## Explicit interaction states. The main action button (RollButton) changes
+## label per state and is only enabled in the "waiting for the player" states:
+## PLAYER_TURN (ROLL), PLAYER_RESULT (CONTINUE), ENEMY_RESULT (CONTINUE) and
+## WAITING_FOR_NEXT_ROUND (NEXT ROUND). Every handler changes state
+## synchronously before awaiting, so a double tap can never fire twice.
+## Only PLAYER_TURN allows ITEM / RUN.
 enum BattleState {
 	PLAYER_TURN,
 	PLAYER_ROLLING,
+	PLAYER_RESULT,
 	ENEMY_ROLLING,
+	ENEMY_RESULT,
 	RESOLVING_ROUND,
+	WAITING_FOR_NEXT_ROUND,
 	VICTORY,
 	DEFEAT,
 	DRAW,
@@ -40,6 +48,10 @@ enum BattleState {
 
 
 var state: BattleState = BattleState.PLAYER_TURN
+
+## Hands rolled this round, kept until the round is resolved.
+var _player_hand: DiceRules.DiceHand = null
+var _enemy_hand: DiceRules.DiceHand = null
 
 ## Player max HP is persistent (see SaveManager.get_max_hp() / the Shop's
 ## +1 Max HP upgrade) instead of a fixed player_max_hp constant.
@@ -304,7 +316,7 @@ func start_battle() -> void:
 	player_hp_bar.value = player_max_hp
 	enemy_hp_bar.value = enemy_max_hp
 
-	turn_banner.text = "Tap ROLL to begin"
+	turn_banner.text = "YOUR ROLL"
 
 	update_ui()
 
@@ -324,7 +336,24 @@ func update_ui() -> void:
 		state == BattleState.PLAYER_TURN
 	)
 
-	roll_button.disabled = not in_player_turn
+	var main_label: String = ""
+	match state:
+		BattleState.PLAYER_TURN:
+			main_label = "ROLL"
+		BattleState.PLAYER_RESULT, BattleState.ENEMY_RESULT:
+			main_label = "CONTINUE"
+		BattleState.WAITING_FOR_NEXT_ROUND:
+			main_label = "NEXT ROUND"
+		_:
+			main_label = roll_button.text
+
+	roll_button.text = main_label
+	roll_button.disabled = not (
+		in_player_turn
+		or state == BattleState.PLAYER_RESULT
+		or state == BattleState.ENEMY_RESULT
+		or state == BattleState.WAITING_FOR_NEXT_ROUND
+	)
 	item_button.disabled = not in_player_turn
 	run_button.disabled = not in_player_turn
 
@@ -361,10 +390,15 @@ func _animate_hp_bar(
 
 
 func _on_roll_pressed() -> void:
-	if state != BattleState.PLAYER_TURN:
-		return
-
-	perform_round()
+	match state:
+		BattleState.PLAYER_TURN:
+			perform_round()
+		BattleState.PLAYER_RESULT:
+			_start_enemy_roll()
+		BattleState.ENEMY_RESULT:
+			_resolve_round(_player_hand, _enemy_hand)
+		BattleState.WAITING_FOR_NEXT_ROUND:
+			_start_next_round()
 
 
 func _on_rules_pressed() -> void:
@@ -527,21 +561,19 @@ func _log_system_note(text: String) -> void:
 ## ------------------------------------------------------------------
 
 func perform_round() -> void:
+	if state != BattleState.PLAYER_TURN:
+		return
+
 	state = BattleState.PLAYER_ROLLING
 
 	enemy_dice_row.visible = false
+	player_dice_row.visible = false
 
-	_set_turn_banner(
-		"%s %s IS ROLLING"
-		% [
-			PlayerDataScript.get_emoji(player_character_type),
-			SaveManager.get_player_name().to_upper(),
-		]
-	)
+	_set_turn_banner("YOUR ROLL")
 
 	update_ui()
 
-	var player_hand: DiceRules.DiceHand = await _roll_and_animate(
+	_player_hand = await _roll_and_animate(
 		player_dice_row,
 		player_dice,
 		PLAYER_DICE_COUNT
@@ -550,20 +582,26 @@ func perform_round() -> void:
 	if exiting_scene or not is_inside_tree():
 		return
 
-	await get_tree().create_timer(0.5).timeout
-
-	if exiting_scene or not is_inside_tree():
-		return
-
-	state = BattleState.ENEMY_ROLLING
+	state = BattleState.PLAYER_RESULT
 
 	_set_turn_banner(
-		"%s IS ROLLING" % String(enemy_data.get("display_name", "ENEMY")).to_upper()
+		"YOUR ROLL\n%s" % _player_hand.display_name
 	)
 
 	update_ui()
 
-	var crab_hand: DiceRules.DiceHand = await _roll_and_animate(
+
+func _start_enemy_roll() -> void:
+	if state != BattleState.PLAYER_RESULT:
+		return
+
+	state = BattleState.ENEMY_ROLLING
+
+	_set_turn_banner("%s ROLL" % _enemy_display_name())
+
+	update_ui()
+
+	_enemy_hand = await _roll_and_animate(
 		enemy_dice_row,
 		enemy_dice,
 		ENEMY_DICE_COUNT
@@ -572,19 +610,20 @@ func perform_round() -> void:
 	if exiting_scene or not is_inside_tree():
 		return
 
-	state = BattleState.RESOLVING_ROUND
+	state = BattleState.ENEMY_RESULT
+
+	_set_turn_banner(
+		"%s ROLL\n%s" % [
+			_enemy_display_name(),
+			_enemy_hand.display_name,
+		]
+	)
 
 	update_ui()
 
-	await get_tree().create_timer(.5).timeout
 
-	if exiting_scene or not is_inside_tree():
-		return
-
-	await _resolve_round(
-		player_hand,
-		crab_hand
-	)
+func _enemy_display_name() -> String:
+	return String(enemy_data.get("display_name", "ENEMY")).to_upper()
 
 
 func _set_turn_banner(text: String) -> void:
@@ -683,10 +722,19 @@ func _resolve_round(
 	player_hand: DiceRules.DiceHand,
 	crab_hand: DiceRules.DiceHand
 ) -> void:
+	if state != BattleState.ENEMY_RESULT:
+		return
+
+	state = BattleState.RESOLVING_ROUND
+
+	update_ui()
+
 	if (
 		player_hand.hand_type == DiceRules.HandType.NO_POINT
 		or crab_hand.hand_type == DiceRules.HandType.NO_POINT
 	):
+		state = BattleState.WAITING_FOR_NEXT_ROUND
+		update_ui()
 		return
 
 	round_number += 1
@@ -710,14 +758,9 @@ func _resolve_round(
 			false
 		)
 
-		await get_tree().create_timer(
-			0.9
-		).timeout
+		state = BattleState.WAITING_FOR_NEXT_ROUND
 
-		if exiting_scene or not is_inside_tree():
-			return
-
-		_start_next_round()
+		update_ui()
 
 		return
 
@@ -790,14 +833,6 @@ func _resolve_round(
 		trident_used
 	)
 
-	await get_tree().create_timer(
-		0.8
-	).timeout
-
-	if exiting_scene or not is_inside_tree():
-		return
-
-
 	if player_won:
 		await _play_attack_animation(
 			player_sprite,
@@ -815,7 +850,7 @@ func _resolve_round(
 
 		if enemy_hp <= 0:
 			await get_tree().create_timer(
-				0.6
+				1.0
 			).timeout
 
 			if exiting_scene or not is_inside_tree():
@@ -842,7 +877,7 @@ func _resolve_round(
 
 		if player_hp <= 0:
 			await get_tree().create_timer(
-				0.6
+				1.0
 			).timeout
 
 			if exiting_scene or not is_inside_tree():
@@ -853,14 +888,10 @@ func _resolve_round(
 			return
 
 
-	await get_tree().create_timer(
-		5
-	).timeout
+	## Dice and result stay on screen until the player taps NEXT ROUND.
+	state = BattleState.WAITING_FOR_NEXT_ROUND
 
-	if exiting_scene or not is_inside_tree():
-		return
-
-	_start_next_round()
+	update_ui()
 
 
 ## ------------------------------------------------------------------
@@ -972,8 +1003,8 @@ func _play_attack_animation(
 		lunge_offset = (
 			toward.normalized()
 			* minf(
-				toward.length() * 0.35,
-				60.0
+				toward.length() * 0.2,
+				24.0
 			)
 		)
 
@@ -1155,12 +1186,18 @@ func _trim_log_display() -> void:
 
 
 func _start_next_round() -> void:
+	if state != BattleState.WAITING_FOR_NEXT_ROUND:
+		return
+
 	state = BattleState.PLAYER_TURN
+
+	_player_hand = null
+	_enemy_hand = null
 
 	player_dice_row.visible = false
 	enemy_dice_row.visible = false
 
-	turn_banner.text = "Tap ROLL to begin"
+	turn_banner.text = "YOUR ROLL"
 
 	update_ui()
 
@@ -1253,7 +1290,9 @@ func show_victory() -> void:
 	## Mark this enemy as beaten and unlock the next one in the progression.
 	## Previously beaten enemies are unaffected, and no enemy is ever
 	## unlocked more than one step ahead.
-	SaveManager.register_enemy_defeat(enemy_key)
+	## Free For All wins never touch Story progression.
+	if SaveManager.is_story_mode():
+		SaveManager.register_enemy_defeat(enemy_key)
 
 	victory_panel.visible = true
 
