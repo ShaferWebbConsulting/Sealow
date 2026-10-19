@@ -34,6 +34,18 @@ static func get_character_texture(cell: Vector2i) -> AtlasTexture:
 	)
 
 
+## Tight, centered crop of a character cell for portrait icons. `focus` is the
+## fraction (0-1) of the cell kept around its center, which minimizes the
+## neighboring atlas characters bleeding into the edges.
+static func get_character_portrait(cell: Vector2i, focus: float = 0.8) -> AtlasTexture:
+	var tex: AtlasTexture = get_character_texture(cell)
+	var region: Rect2 = tex.region
+	var center: Vector2 = region.get_center()
+	var size: Vector2 = region.size * clampf(focus, 0.1, 1.0)
+	tex.region = Rect2(center - size * 0.5, size)
+	return tex
+
+
 ## Returns an AtlasTexture cropped to `cell` (zero-based Vector2i(column, row))
 ## from backgrounds.png.
 static func get_background_texture(cell: Vector2i) -> AtlasTexture:

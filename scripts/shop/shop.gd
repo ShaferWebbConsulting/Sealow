@@ -62,8 +62,8 @@ func _build_row(item: ItemData, key: String, owned: int) -> Control:
 	style.set_corner_radius_all(16)
 	style.content_margin_left = 16.0
 	style.content_margin_right = 16.0
-	style.content_margin_top = 12.0
-	style.content_margin_bottom = 12.0
+	style.content_margin_top = 16.0
+	style.content_margin_bottom = 16.0
 	panel.add_theme_stylebox_override("panel", style)
 
 	var row: HBoxContainer = HBoxContainer.new()
@@ -74,7 +74,7 @@ func _build_row(item: ItemData, key: String, owned: int) -> Control:
 	if icon_texture != null:
 		var icon: TextureRect = TextureRect.new()
 		icon.texture = icon_texture
-		icon.custom_minimum_size = Vector2(48, 48)
+		icon.custom_minimum_size = Vector2(64, 64)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		row.add_child(icon)
@@ -85,13 +85,13 @@ func _build_row(item: ItemData, key: String, owned: int) -> Control:
 
 	var title: Label = Label.new()
 	title.text = item.display_name.to_upper() if icon_texture != null else "%s %s" % [item.icon, item.display_name.to_upper()]
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 28)
 	info_box.add_child(title)
 
 	var desc: Label = Label.new()
 	desc.text = item.description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 15)
+	desc.add_theme_font_size_override("font_size", 20)
 	desc.add_theme_color_override("font_color", Color(0.68, 0.73, 0.74, 1.0))
 	info_box.add_child(desc)
 
@@ -101,19 +101,20 @@ func _build_row(item: ItemData, key: String, owned: int) -> Control:
 
 	var cost_label: Label = Label.new()
 	cost_label.text = "%d 🐚" % ItemData.SHOP_COST_SHELLS
-	cost_label.add_theme_font_size_override("font_size", 18)
+	cost_label.add_theme_font_size_override("font_size", 24)
 	cost_label.add_theme_color_override("font_color", Color(0.941176, 0.760784, 0.239216, 1))
 	cost_row.add_child(cost_label)
 
 	var owned_label: Label = Label.new()
 	owned_label.text = "Owned: %d" % owned
-	owned_label.add_theme_font_size_override("font_size", 18)
+	owned_label.add_theme_font_size_override("font_size", 22)
 	owned_label.add_theme_color_override("font_color", Color(0.678431, 0.72549, 0.741176, 1))
 	cost_row.add_child(owned_label)
 
 	var buy_button: Button = Button.new()
 	buy_button.text = "BUY"
-	buy_button.custom_minimum_size = Vector2(96, 64)
+	buy_button.custom_minimum_size = Vector2(120, 64)
+	buy_button.add_theme_font_size_override("font_size", 26)
 	buy_button.pressed.connect(_on_buy_pressed.bind(key))
 	row.add_child(buy_button)
 

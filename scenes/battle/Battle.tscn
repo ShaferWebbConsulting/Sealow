@@ -136,257 +136,259 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 60
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 32
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 24
 
 [node name="MainVBox" type="VBoxContainer" parent="SafeArea"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 6
 
-[node name="Battlefield" type="Control" parent="SafeArea/MainVBox"]
-custom_minimum_size = Vector2(0, 420)
+[node name="TurnBannerPanel" type="PanelContainer" parent="SafeArea/MainVBox"]
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
-size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_banner")
 
-[node name="EnemyCard" type="PanelContainer" parent="SafeArea/MainVBox/Battlefield"]
-layout_mode = 1
-anchors_preset = 0
-anchor_right = 0.62
-anchor_bottom = 0.15
+[node name="TurnBanner" type="Label" parent="SafeArea/MainVBox/TurnBannerPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "YOUR ROLL"
+autowrap_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EnemyCard" type="PanelContainer" parent="SafeArea/MainVBox"]
+layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="VBox" type="VBoxContainer" parent="SafeArea/MainVBox/Battlefield/EnemyCard"]
+[node name="VBox" type="VBoxContainer" parent="SafeArea/MainVBox/EnemyCard"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 2
 
-[node name="NameRow" type="HBoxContainer" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox"]
+[node name="NameRow" type="HBoxContainer" parent="SafeArea/MainVBox/EnemyCard/VBox"]
 layout_mode = 2
 
-[node name="EnemyName" type="Label" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox/NameRow"]
+[node name="EnemyName" type="Label" parent="SafeArea/MainVBox/EnemyCard/VBox/NameRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 26
 text = "ENEMY"
 
-[node name="EnemyLevel" type="Label" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox/NameRow"]
+[node name="EnemyLevel" type="Label" parent="SafeArea/MainVBox/EnemyCard/VBox/NameRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
 text = "LV. 1"
 
-[node name="EnemyHpBar" type="ProgressBar" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox"]
+[node name="EnemyHpBar" type="ProgressBar" parent="SafeArea/MainVBox/EnemyCard/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 14)
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_crab_fill")
 max_value = 10.0
 value = 10.0
 show_percentage = false
 
-[node name="EnemyHpLabel" type="Label" parent="SafeArea/MainVBox/Battlefield/EnemyCard/VBox"]
+[node name="EnemyHpLabel" type="Label" parent="SafeArea/MainVBox/EnemyCard/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
 text = "HP 10 / 10"
 
-[node name="EnemySprite" type="TextureRect" parent="SafeArea/MainVBox/Battlefield"]
+[node name="EnemySpriteHolder" type="Control" parent="SafeArea/MainVBox"]
+custom_minimum_size = Vector2(0, 170)
+size_flags_vertical = 3
+layout_mode = 2
+
+[node name="EnemySprite" type="TextureRect" parent="SafeArea/MainVBox/EnemySpriteHolder"]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.32
-anchor_top = 0.10
+anchors_preset = 15
+anchor_left = 0.0
+anchor_top = 0.0
 anchor_right = 1.0
-anchor_bottom = 0.36
+anchor_bottom = 1.0
+offset_top = 8.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="EnemyDamageLabel" type="Label" parent="SafeArea/MainVBox/Battlefield"]
+[node name="EnemyDamageLabel" type="Label" parent="SafeArea/MainVBox/EnemySpriteHolder"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.32
-anchor_top = 0.06
+anchors_preset = 15
 anchor_right = 1.0
-anchor_bottom = 0.28
-theme_override_font_sizes/font_size = 36
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 48
 theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
 text = "-0"
-horizontal_alignment = 1
-visible = false
-
-[node name="EnemyRollArea" type="VBoxContainer" parent="SafeArea/MainVBox/Battlefield"]
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.1
-anchor_top = 0.35
-anchor_right = 0.9
-anchor_bottom = 0.5
-theme_override_constants/separation = 4
-
-[node name="EnemyRollLabel" type="Label" parent="SafeArea/MainVBox/Battlefield/EnemyRollArea"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 15
-theme_override_colors/font_color = Color(0.870588, 0.360784, 0.298039, 1)
-text = "CRAB'S DICE"
-horizontal_alignment = 1
-
-[node name="EnemyDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/Battlefield/EnemyRollArea"]
-unique_name_in_owner = true
-layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 10
-visible = false
-
-[node name="EnemyDie1" parent="SafeArea/MainVBox/Battlefield/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="EnemyDie2" parent="SafeArea/MainVBox/Battlefield/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="EnemyDie3" parent="SafeArea/MainVBox/Battlefield/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="TurnBannerPanel" type="PanelContainer" parent="SafeArea/MainVBox/Battlefield"]
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.06
-anchor_top = 0.5
-anchor_right = 0.94
-anchor_bottom = 0.62
-theme_override_styles/panel = SubResource("StyleBoxFlat_banner")
-
-[node name="TurnBanner" type="Label" parent="SafeArea/MainVBox/Battlefield/TurnBannerPanel"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "Tap ROLL to begin"
-autowrap_mode = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PlayerRollArea" type="VBoxContainer" parent="SafeArea/MainVBox/Battlefield"]
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.1
-anchor_top = 0.63
-anchor_right = 0.9
-anchor_bottom = 0.78
+[node name="EnemyRollArea" type="VBoxContainer" parent="SafeArea/MainVBox"]
+custom_minimum_size = Vector2(0, 136)
+layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="PlayerRollLabel" type="Label" parent="SafeArea/MainVBox/Battlefield/PlayerRollArea"]
+[node name="EnemyRollLabel" type="Label" parent="SafeArea/MainVBox/EnemyRollArea"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 15
-theme_override_colors/font_color = Color(0.34902, 0.784314, 0.698039, 1)
-text = "YOUR ROLL"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.870588, 0.360784, 0.298039, 1)
+text = "ENEMY DICE"
 horizontal_alignment = 1
 
-[node name="PlayerDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/Battlefield/PlayerRollArea"]
+[node name="EnemyDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/EnemyRollArea"]
 unique_name_in_owner = true
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 10
+theme_override_constants/separation = 14
 visible = false
 
-[node name="PlayerDie1" parent="SafeArea/MainVBox/Battlefield/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
+[node name="EnemyDie1" parent="SafeArea/MainVBox/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(104, 104)
 layout_mode = 2
 
-[node name="PlayerDie2" parent="SafeArea/MainVBox/Battlefield/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
+[node name="EnemyDie2" parent="SafeArea/MainVBox/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(104, 104)
 layout_mode = 2
 
-[node name="PlayerDie3" parent="SafeArea/MainVBox/Battlefield/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
+[node name="EnemyDie3" parent="SafeArea/MainVBox/EnemyRollArea/EnemyDiceRow" instance=ExtResource("3_dice")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(104, 104)
 layout_mode = 2
 
-[node name="PlayerSprite" type="TextureRect" parent="SafeArea/MainVBox/Battlefield"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.64
-anchor_right = 0.68
-anchor_bottom = 0.9
-expand_mode = 1
-stretch_mode = 5
-
-[node name="PlayerDamageLabel" type="Label" parent="SafeArea/MainVBox/Battlefield"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.6
-anchor_right = 0.68
-anchor_bottom = 0.8
-theme_override_font_sizes/font_size = 36
-theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
-text = "-0"
-horizontal_alignment = 1
-visible = false
-
-[node name="PlayerCard" type="PanelContainer" parent="SafeArea/MainVBox/Battlefield"]
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.38
-anchor_top = 0.86
-anchor_right = 1.0
-anchor_bottom = 1.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
-
-[node name="VBox" type="VBoxContainer" parent="SafeArea/MainVBox/Battlefield/PlayerCard"]
+[node name="PlayerRollArea" type="VBoxContainer" parent="SafeArea/MainVBox"]
+custom_minimum_size = Vector2(0, 136)
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="NameRow" type="HBoxContainer" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox"]
+[node name="PlayerRollLabel" type="Label" parent="SafeArea/MainVBox/PlayerRollArea"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.34902, 0.784314, 0.698039, 1)
+text = "YOUR DICE"
+horizontal_alignment = 1
+
+[node name="PlayerDiceRow" type="HBoxContainer" parent="SafeArea/MainVBox/PlayerRollArea"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 14
+visible = false
+
+[node name="PlayerDie1" parent="SafeArea/MainVBox/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(104, 104)
+layout_mode = 2
+
+[node name="PlayerDie2" parent="SafeArea/MainVBox/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(104, 104)
+layout_mode = 2
+
+[node name="PlayerDie3" parent="SafeArea/MainVBox/PlayerRollArea/PlayerDiceRow" instance=ExtResource("3_dice")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(104, 104)
+layout_mode = 2
+
+[node name="PlayerSpriteHolder" type="Control" parent="SafeArea/MainVBox"]
+custom_minimum_size = Vector2(0, 170)
+size_flags_vertical = 3
+layout_mode = 2
+
+[node name="PlayerSprite" type="TextureRect" parent="SafeArea/MainVBox/PlayerSpriteHolder"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 8.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlayerDamageLabel" type="Label" parent="SafeArea/MainVBox/PlayerSpriteHolder"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 48
+theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
+text = "-0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PlayerCard" type="PanelContainer" parent="SafeArea/MainVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/MainVBox/PlayerCard"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="NameRow" type="HBoxContainer" parent="SafeArea/MainVBox/PlayerCard/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PlayerColorDot" type="Panel" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox/NameRow"]
+[node name="PlayerColorDot" type="Panel" parent="SafeArea/MainVBox/PlayerCard/VBox/NameRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(16, 16)
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_colordot")
 
-[node name="PlayerName" type="Label" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox/NameRow"]
+[node name="PlayerName" type="Label" parent="SafeArea/MainVBox/PlayerCard/VBox/NameRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 26
 text = "🐙 LITTLE OCTO"
 
-[node name="OctoLevel" type="Label" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox/NameRow"]
+[node name="OctoLevel" type="Label" parent="SafeArea/MainVBox/PlayerCard/VBox/NameRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
 text = "LV. 1"
 
-[node name="PlayerHpBar" type="ProgressBar" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox"]
+[node name="PlayerHpBar" type="ProgressBar" parent="SafeArea/MainVBox/PlayerCard/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 14)
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_octo_fill")
 max_value = 12.0
 value = 12.0
 show_percentage = false
 
-[node name="PlayerHpLabel" type="Label" parent="SafeArea/MainVBox/Battlefield/PlayerCard/VBox"]
+[node name="PlayerHpLabel" type="Label" parent="SafeArea/MainVBox/PlayerCard/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
 text = "HP 12 / 12"
 
 [node name="RecentRoundsPanel" type="PanelContainer" parent="SafeArea/MainVBox"]
+visible = false
 custom_minimum_size = Vector2(0, 118)
 layout_mode = 2
 size_flags_vertical = 0
@@ -398,7 +400,7 @@ theme_override_constants/separation = 4
 
 [node name="Title" type="Label" parent="SafeArea/MainVBox/RecentRoundsPanel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
 text = "RECENT ROUNDS"
 
@@ -421,9 +423,9 @@ theme_override_constants/separation = 8
 
 [node name="RollButton" type="Button" parent="SafeArea/MainVBox/ActionArea"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 76)
+custom_minimum_size = Vector2(0, 84)
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 32
 text = "ROLL"
 
 [node name="SecondaryRow" type="HBoxContainer" parent="SafeArea/MainVBox/ActionArea"]
@@ -432,26 +434,26 @@ theme_override_constants/separation = 10
 
 [node name="ItemButton" type="Button" parent="SafeArea/MainVBox/ActionArea/SecondaryRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 text = "ITEM"
 
 [node name="RunButton" type="Button" parent="SafeArea/MainVBox/ActionArea/SecondaryRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 text = "RUN"
 
 [node name="RulesButton" type="Button" parent="SafeArea/MainVBox/ActionArea/SecondaryRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 text = "ⓘ RULES"
 
 [node name="VictoryPanel" type="Control" parent="."]

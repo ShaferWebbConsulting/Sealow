@@ -27,10 +27,13 @@ func _process(_delta: float) -> void:
 	if _rounds_triggered >= MAX_ROUNDS:
 		_finish()
 		return
-	if _battle.state == _battle.BattleState.PLAYER_TURN:
+	var st: int = _battle.state
+	if st == _battle.BattleState.PLAYER_TURN:
 		_rounds_triggered += 1
 		print("Triggering round %d (player_hp=%d enemy_hp=%d)" % [_rounds_triggered, _battle.player_hp, _battle.enemy_hp])
-		_battle.perform_round()
+		_battle._on_roll_pressed()
+	elif st == _battle.BattleState.WAITING_FOR_NEXT_ROUND:
+		_battle._on_roll_pressed()
 
 
 func _finish() -> void:

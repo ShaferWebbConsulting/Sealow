@@ -229,6 +229,33 @@ func buy_hp_upgrade(cost: int = 5) -> bool:
 ## Enemy progression
 ## ------------------------------------------------------------------
 
+## Session-only game mode (not persisted, so Story progress is never touched).
+enum GameMode { STORY, FREE_FOR_ALL }
+
+var current_game_mode: GameMode = GameMode.STORY
+
+
+func set_game_mode(mode: GameMode) -> void:
+	current_game_mode = mode
+
+
+func get_game_mode() -> GameMode:
+	return current_game_mode
+
+
+func is_story_mode() -> bool:
+	return current_game_mode == GameMode.STORY
+
+
+func is_free_for_all() -> bool:
+	return current_game_mode == GameMode.FREE_FOR_ALL
+
+
+## Whether the player may fight `enemy_key` in the current mode.
+func is_enemy_selectable(enemy_key: String) -> bool:
+	return is_free_for_all() or is_enemy_unlocked(enemy_key)
+
+
 func get_selected_enemy() -> String:
 	return String(data.get("selected_enemy", EnemyDataScript.get_first_enemy_key()))
 
