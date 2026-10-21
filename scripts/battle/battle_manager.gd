@@ -182,6 +182,91 @@ func _ready() -> void:
 
 	draw_return_button.pressed.connect(_on_return_home_pressed)
 
+	rules_button.pressed.connect(_on_rules_pressed)
+	rules_close_button.pressed.connect(_on_rules_close_pressed)
+
+	item_popup.item_used.connect(_on_item_used)
+
+	_setup_player_character()
+	_setup_enemy()
+	start_battle()
+
+	# Capture sprite home positions after layout has finished.
+	await get_tree().process_frame
+
+	_player_sprite_home = player_sprite.position
+	_enemy_sprite_home = enemy_sprite.position
+
+
+func _exit_tree() -> void:
+	exiting_scene = true
+
+
+## Applies saved player creature/color/name information.
+func _setup_player_character() -> void:
+	player_character_type = SaveManager.get_character_type()
+	player_max_hp = SaveManager.get_max_hp()
+
+	player_sprite.texture = PlayerDataScript.get_texture(player_character_type)
+
+	var player_name: String = SaveManager.get_player_name()
+
+	player_name_label.text = "%s %s" % [
+		PlayerDataScript.get_emoji(player_character_type),
+		player_name.to_upper(),
+	]
+
+	var dot_style: StyleBoxFlat = StyleBoxFlat.new()
+
+	dot_style.bg_color = PlayerDataScript.get_color(
+		SaveManager.get_character_color()
+	)
+
+	dot_style.set_corner_radius_all(20)
+
+	player_color_dot.add_theme_stylebox_override(
+		"panel",
+		dot_style
+	)
+
+
+## Resolves the player's selected opponent (see Enemy Select) through
+## EnemyData and applies its sprite, HP, name, and depth background. Replaces
+## the old hardcoded "always fight the Crab" setup.
+func _setup_enemy() -> void:
+	enemy_key = SaveManager.get_selected_enemy()
+	enemy_data = EnemyDataScript.get_enemy(enemy_key)
+
+	# Defensive fallback in case of a corrupted/unknown save value.
+	if enemy_data.is_empty():
+		enemy_key = EnemyDataScript.get_first_enemy_key()
+		enemy_data = EnemyDataScript.get_enemy(enemy_key)
+
+	enemy_max_hp = int(enemy_data["max_hp"])
+
+	enemy_sprite.texture = EnemyDataScript.get_texture(enemy_key)
+
+	enemy_name_label.text = String(enemy_data["display_name"]).to_upper()
+
+	depth_background.texture = SeaLowAtlasScript.get_background_texture(
+		EnemyDataScript.get_background_cell(String(enemy_data["depth"]))
+	)
+
+
+func start_battle() -> void:
+	state = BattleState.PLAYER_TURN
+
+	player_hp = player_max_hp
+	enemy_hp = enemy_max_hp
+
+	victory_reward_given = false
+
+	round_number = 0
+	battle_log.clear()
+
+	trident_armed = false
+	shield_armed = false
+
 	victory_panel.visible = false
 	defeat_panel.visible = false
 	draw_panel.visible = false

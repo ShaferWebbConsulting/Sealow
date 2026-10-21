@@ -68,19 +68,25 @@ theme_override_constants/separation = 20
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ContinueButton" type="Button" parent="SafeArea/Content" unique_id=1629436972]
+[node name="Buttons" type="HBoxContainer" parent="SafeArea/Content"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ContinueButton" type="Button" parent="SafeArea/Content/Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 84)
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
 text = "CONTINUE"
 
-[node name="NewDiveButton" type="Button" parent="SafeArea/Content" unique_id=1470229609]
+[node name="NewDiveButton" type="Button" parent="SafeArea/Content/Buttons" unique_id=1470229609]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 84)
 layout_mode = 2
+size_flags_horizontal = 3
 theme_type_variation = &"GoldButton"
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 28
 text = "NEW DIVE"
 
 [node name="ConfirmPanel" type="Control" parent="." unique_id=305955013]
@@ -123,7 +129,7 @@ theme_override_constants/separation = 22
 [node name="Title" type="Label" parent="ConfirmPanel/Margin/Panel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.55, 1)
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 28
 text = "🐚 START A NEW DIVE? 🐚"
 horizontal_alignment = 1
 autowrap_mode = 3

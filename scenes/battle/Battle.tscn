@@ -719,7 +719,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"DangerButton"
 theme_override_font_sizes/font_size = 26
-text = "RUN"
+text = "RUN AWAY"
 
 [node name="RulesPanel" type="Control" parent="."]
 unique_name_in_owner = true
@@ -792,36 +792,70 @@ layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Body" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll"]
+[node name="Body" type="VBoxContainer" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Head0" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.38, 0.05, 1)
+theme_override_font_sizes/font_size = 32
+text = "HOW TO PLAY"
+
+[node name="Text0" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.05, 0.14, 0.27, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_constants/line_spacing = 8
-text = "Each round, you and the Crab both roll 3 dice.
-Whoever rolls the stronger hand wins the round and damages the other.
+text = "Each round, you and your opponent both roll 3 dice. The stronger hand wins the round and deals damage. Reduce your opponent to 0 HP to win the battle."
+autowrap_mode = 3
 
-HAND STRENGTH (weakest → strongest)
-💀 WASHED OUT (1•2•3) — weakest, auto-loses.
-🎯 PAIR + POINT — a matching pair plus an odd die. Higher pair wins; ties break on the odd die.
-🎲 TRIPLE — three matching dice. Higher triple wins.
-🌊 TIDAL ROLL (4•5•6) — strongest possible hand.
-No-point rolls (no pair, triple, or tidal) automatically reroll.
+[node name="Sep1" type="HSeparator" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
 
-⚔️ HOW DAMAGE WORKS
-🌊 TIDAL / AUTOMATIC WIN — Deals 3 HP. (Rolling Tidal, or your opponent Washing Out, is an automatic win.)
-🎲 TRIPLES — Deals 2 HP.
-🎯 PAIR + POINT — Deals 1 HP.
-🤝 TIE — No damage. Roll again.
+[node name="Head1" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.38, 0.05, 1)
+theme_override_font_sizes/font_size = 32
+text = "HAND STRENGTH"
 
-Reduce your opponent to 0 HP to win the battle.
+[node name="Text1" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.05, 0.14, 0.27, 1)
+theme_override_font_sizes/font_size = 24
+text = "Weakest to strongest:\n💀 WASHED OUT (1•2•3) — auto-loses.\n🎯 PAIR + POINT — higher pair wins; ties break on the odd die.\n🎲 TRIPLE — higher triple wins.\n🌊 TIDAL ROLL (4•5•6) — strongest.\nNo-point rolls reroll automatically."
+autowrap_mode = 3
 
-🎒 ITEMS
-Items can change the outcome of combat — use one from the ITEM menu:
-🐢 Turtle Shield — turns a defeat into a draw.
-🔱 Trident — +2 damage on your next successful hit.
-🧜 Mermaid Scale — restore 2 HP."
-horizontal_alignment = 0
+[node name="Sep2" type="HSeparator" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+
+[node name="Head2" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.38, 0.05, 1)
+theme_override_font_sizes/font_size = 32
+text = "DAMAGE"
+
+[node name="Text2" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.05, 0.14, 0.27, 1)
+theme_override_font_sizes/font_size = 24
+text = "🌊 Tidal / automatic win — 3 HP\n🎲 Triple — 2 HP\n🎯 Pair + point — 1 HP\n🤝 Tie — no damage, roll again."
+autowrap_mode = 3
+
+[node name="Sep3" type="HSeparator" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+
+[node name="Head3" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.38, 0.05, 1)
+theme_override_font_sizes/font_size = 32
+text = "ITEMS"
+
+[node name="Text3" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.05, 0.14, 0.27, 1)
+theme_override_font_sizes/font_size = 24
+text = "Use items from the ITEM menu:\n🐢 Turtle Shield — turns a defeat into a draw.\n🔱 Trident — +2 damage on your next hit.\n🧜 Mermaid Scale — restore 2 HP."
 autowrap_mode = 3
 
 [node name="RulesCloseButton" type="Button" parent="RulesPanel/SafeArea/VBox"]
