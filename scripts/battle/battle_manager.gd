@@ -14,8 +14,6 @@ const VICTORY_SHELLS: int = 10
 const HP_TWEEN_DURATION: float = 0.3
 const DICE_ROLL_DURATION: float = 1.4
 
-const SEAWEED_ITEM_KEY: String = "circle_of_seaweed"
-
 ## Only the 3 most recent rounds are shown in the compact Recent Rounds log
 ## (newest first); the full history stays in `battle_log`.
 const MAX_LOG_ENTRIES_SHOWN: int = 3
@@ -43,7 +41,6 @@ enum BattleState {
 	VICTORY,
 	DEFEAT,
 	DRAW,
-	RETRY_PROMPT,
 }
 
 
@@ -158,13 +155,6 @@ var _enemy_sprite_home: Vector2 = Vector2.ZERO
 @onready var draw_return_button: Button = %DrawReturnButton
 
 
-## Circle of Seaweed retry UI.
-@onready var seaweed_retry_panel: Control = %SeaweedRetryPanel
-@onready var seaweed_owned_label: Label = %SeaweedOwnedLabel
-@onready var use_seaweed_button: Button = %UseSeaweedButton
-@onready var decline_seaweed_button: Button = %DeclineSeaweedButton
-
-
 @onready var run_confirm_panel: Control = %RunConfirmPanel
 @onready var stay_button: Button = %StayButton
 @onready var confirm_run_button: Button = %ConfirmRunButton
@@ -192,10 +182,6 @@ func _ready() -> void:
 
 	draw_return_button.pressed.connect(_on_return_home_pressed)
 
-	# Circle of Seaweed.
-	use_seaweed_button.pressed.connect(_on_use_seaweed_pressed)
-	decline_seaweed_button.pressed.connect(_on_decline_seaweed_pressed)
-
 	rules_button.pressed.connect(_on_rules_pressed)
 	rules_close_button.pressed.connect(_on_rules_close_pressed)
 
@@ -221,9 +207,7 @@ func _setup_player_character() -> void:
 	player_character_type = SaveManager.get_character_type()
 	player_max_hp = SaveManager.get_max_hp()
 
-	player_sprite.texture = SeaLowAtlasScript.get_character_texture(
-		PlayerDataScript.get_atlas_cell(player_character_type)
-	)
+	player_sprite.texture = PlayerDataScript.get_texture(player_character_type)
 
 	var player_name: String = SaveManager.get_player_name()
 
@@ -260,9 +244,7 @@ func _setup_enemy() -> void:
 
 	enemy_max_hp = int(enemy_data["max_hp"])
 
-	enemy_sprite.texture = SeaLowAtlasScript.get_character_texture(
-		enemy_data["atlas"]
-	)
+	enemy_sprite.texture = EnemyDataScript.get_texture(enemy_key)
 
 	enemy_name_label.text = String(enemy_data["display_name"]).to_upper()
 
@@ -288,9 +270,6 @@ func start_battle() -> void:
 	victory_panel.visible = false
 	defeat_panel.visible = false
 	draw_panel.visible = false
-
-	# Seaweed retry prompt must always begin hidden.
-	seaweed_retry_panel.visible = false
 
 	rules_panel.visible = false
 	run_confirm_panel.visible = false
@@ -357,7 +336,6 @@ func update_ui() -> void:
 		state != BattleState.VICTORY
 		and state != BattleState.DEFEAT
 		and state != BattleState.DRAW
-		and state != BattleState.RETRY_PROMPT
 	)
 
 
@@ -439,10 +417,6 @@ func _on_item_pressed() -> void:
 	if shield_armed:
 		disabled_reasons["turtle_shield"] = "ALREADY ARMED"
 
-	## Circle of Seaweed is NOT manually activated.
-	## It is automatically offered when the player is defeated.
-	disabled_reasons["circle_of_seaweed"] = "AUTO ON DEFEAT"
-
 	item_popup.open(
 		SaveManager.get_inventory(),
 		disabled_reasons
@@ -459,11 +433,6 @@ func _on_item_used(item_key: String) -> void:
 
 		"turtle_shield":
 			_use_turtle_shield()
-
-		"circle_of_seaweed":
-			# This item is intentionally automatic.
-			# It cannot be consumed from the normal ITEM menu.
-			pass
 
 	item_popup.close()
 
@@ -867,14 +836,12 @@ func _resolve_round(
 
 
 ## ------------------------------------------------------------------
-## Defeat / protection / retry resolution
+## Defeat / protection resolution
 ## ------------------------------------------------------------------
 
 ## Loss priority:
 ##
 ## 1. Armed Turtle Shield -> DRAW
-## 2. Circle of Seaweed available -> offer RETRY
-## 3. Otherwise -> normal DEFEAT
 func _handle_player_defeat() -> void:
 	## Turtle Shield gets first priority.
 	if ItemEffectsScript.resolve_defeat(
@@ -883,68 +850,6 @@ func _handle_player_defeat() -> void:
 		shield_armed = false
 		show_draw()
 		return
-
-	var seaweed_count: int = SaveManager.get_item_count(
-		SEAWEED_ITEM_KEY
-	)
-
-	## Seaweed is only offered if the player actually owns one.
-	if ItemEffectsScript.resolve_retry(
-		seaweed_count > 0
-	):
-		_show_seaweed_retry(
-			seaweed_count
-		)
-		return
-
-	show_defeat()
-
-
-func _show_seaweed_retry(
-	count: int
-) -> void:
-	state = BattleState.RETRY_PROMPT
-
-	turn_banner.text = "THE SEAWEED CALLS..."
-
-	seaweed_owned_label.text = (
-		"Owned: %d"
-		% count
-	)
-
-	seaweed_retry_panel.visible = true
-
-	update_ui()
-
-
-## Player chooses to consume one Circle of Seaweed and restart this exact
-## battle from full HP.
-func _on_use_seaweed_pressed() -> void:
-	if state != BattleState.RETRY_PROMPT:
-		return
-
-	var consumed: bool = SaveManager.consume_item(
-		SEAWEED_ITEM_KEY
-	)
-
-	## Defensive fallback: if inventory somehow changed before the player
-	## pressed the button, simply continue to normal defeat.
-	if not consumed:
-		seaweed_retry_panel.visible = false
-		show_defeat()
-		return
-
-	seaweed_retry_panel.visible = false
-
-	restart_battle()
-
-
-## Player keeps the Seaweed and accepts the normal defeat instead.
-func _on_decline_seaweed_pressed() -> void:
-	if state != BattleState.RETRY_PROMPT:
-		return
-
-	seaweed_retry_panel.visible = false
 
 	show_defeat()
 
@@ -1290,8 +1195,6 @@ func show_defeat() -> void:
 
 	turn_banner.text = "DEFEAT..."
 
-	seaweed_retry_panel.visible = false
-
 	update_ui()
 
 	defeat_panel.visible = true
@@ -1301,8 +1204,6 @@ func show_draw() -> void:
 	state = BattleState.DRAW
 
 	turn_banner.text = "DRAW."
-
-	seaweed_retry_panel.visible = false
 
 	update_ui()
 

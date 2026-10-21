@@ -6,7 +6,7 @@ class_name EnemyData
 ## logic directly.
 
 ## Depth -> backgrounds.png atlas cell (zero-based). See SeaLowAtlas for the
-## actual cropping helper.
+## background cropping helper.
 const BACKGROUND_CELLS: Dictionary = {
 	"surface": Vector2i(0, 0),
 	"reef": Vector2i(1, 0),
@@ -28,7 +28,7 @@ const ENEMIES: Dictionary = {
 		"tier": "starter",
 		"depth": "surface",
 		"max_hp": 3,
-		"atlas": Vector2i(0, 0),
+		"texture_path": "res://assets/characters/little_octo.png",
 		"progression_index": 0,
 	},
 	"little_crab": {
@@ -36,7 +36,7 @@ const ENEMIES: Dictionary = {
 		"tier": "starter",
 		"depth": "surface",
 		"max_hp": 3,
-		"atlas": Vector2i(1, 0),
+		"texture_path": "res://assets/characters/little_crab.png",
 		"progression_index": 1,
 	},
 	"little_shrimp": {
@@ -44,7 +44,7 @@ const ENEMIES: Dictionary = {
 		"tier": "starter",
 		"depth": "surface",
 		"max_hp": 3,
-		"atlas": Vector2i(2, 0),
+		"texture_path": "res://assets/characters/little_shrimp.png",
 		"progression_index": 2,
 	},
 	"little_fish": {
@@ -52,7 +52,7 @@ const ENEMIES: Dictionary = {
 		"tier": "starter",
 		"depth": "surface",
 		"max_hp": 3,
-		"atlas": Vector2i(3, 0),
+		"texture_path": "res://assets/characters/little_fish.png",
 		"progression_index": 3,
 	},
 	"turtle": {
@@ -60,7 +60,7 @@ const ENEMIES: Dictionary = {
 		"tier": "starter",
 		"depth": "surface",
 		"max_hp": 4,
-		"atlas": Vector2i(4, 0),
+		"texture_path": "res://assets/characters/turtle.png",
 		"progression_index": 4,
 	},
 
@@ -72,7 +72,7 @@ const ENEMIES: Dictionary = {
 		"tier": "medium",
 		"depth": "reef",
 		"max_hp": 5,
-		"atlas": Vector2i(0, 1),
+		"texture_path": "res://assets/characters/octo_bruiser.png",
 		"progression_index": 5,
 	},
 	"reef_crab": {
@@ -80,7 +80,7 @@ const ENEMIES: Dictionary = {
 		"tier": "medium",
 		"depth": "reef",
 		"max_hp": 6,
-		"atlas": Vector2i(1, 1),
+		"texture_path": "res://assets/characters/reef_crab.png",
 		"progression_index": 6,
 	},
 	"pistol_shrimp": {
@@ -88,7 +88,7 @@ const ENEMIES: Dictionary = {
 		"tier": "medium",
 		"depth": "reef",
 		"max_hp": 6,
-		"atlas": Vector2i(2, 1),
+		"texture_path": "res://assets/characters/pistol_shrimp.png",
 		"progression_index": 7,
 	},
 	"reef_runner": {
@@ -96,7 +96,7 @@ const ENEMIES: Dictionary = {
 		"tier": "medium",
 		"depth": "reef",
 		"max_hp": 7,
-		"atlas": Vector2i(3, 1),
+		"texture_path": "res://assets/characters/reef_runner.png",
 		"progression_index": 8,
 	},
 	"sea_snake": {
@@ -104,7 +104,7 @@ const ENEMIES: Dictionary = {
 		"tier": "medium",
 		"depth": "reef",
 		"max_hp": 8,
-		"atlas": Vector2i(4, 1),
+		"texture_path": "res://assets/characters/sea_snake.png",
 		"progression_index": 9,
 	},
 
@@ -116,7 +116,7 @@ const ENEMIES: Dictionary = {
 		"tier": "large",
 		"depth": "coastal_edge",
 		"max_hp": 9,
-		"atlas": Vector2i(0, 2),
+		"texture_path": "res://assets/characters/kraken_octo.png",
 		"progression_index": 10,
 	},
 	"king_crab": {
@@ -124,7 +124,7 @@ const ENEMIES: Dictionary = {
 		"tier": "large",
 		"depth": "coastal_edge",
 		"max_hp": 10,
-		"atlas": Vector2i(1, 2),
+		"texture_path": "res://assets/characters/king_crab.png",
 		"progression_index": 11,
 	},
 	"tiger_shrimp": {
@@ -132,7 +132,7 @@ const ENEMIES: Dictionary = {
 		"tier": "large",
 		"depth": "coastal_edge",
 		"max_hp": 11,
-		"atlas": Vector2i(2, 2),
+		"texture_path": "res://assets/characters/tiger_shrimp.png",
 		"progression_index": 12,
 	},
 	"barracuda": {
@@ -140,7 +140,7 @@ const ENEMIES: Dictionary = {
 		"tier": "large",
 		"depth": "coastal_edge",
 		"max_hp": 12,
-		"atlas": Vector2i(3, 2),
+		"texture_path": "res://assets/characters/barracuda.png",
 		"progression_index": 13,
 	},
 
@@ -152,7 +152,7 @@ const ENEMIES: Dictionary = {
 		"tier": "special",
 		"depth": "mystic_waters",
 		"max_hp": 13,
-		"atlas": Vector2i(0, 3),
+		"texture_path": "res://assets/characters/large_guppy.png",
 		"progression_index": 14,
 	},
 	"electric_eel": {
@@ -160,7 +160,7 @@ const ENEMIES: Dictionary = {
 		"tier": "special",
 		"depth": "mystic_waters",
 		"max_hp": 14,
-		"atlas": Vector2i(4, 2),
+		"texture_path": "res://assets/characters/electric_eel.png",
 		"progression_index": 15,
 	},
 	"puffer_boss": {
@@ -168,7 +168,7 @@ const ENEMIES: Dictionary = {
 		"tier": "special",
 		"depth": "mystic_waters",
 		"max_hp": 15,
-		"atlas": Vector2i(1, 3),
+		"texture_path": "res://assets/characters/puffer_boss.png",
 		"progression_index": 16,
 	},
 	"hammerhead_hustler": {
@@ -176,7 +176,7 @@ const ENEMIES: Dictionary = {
 		"tier": "special",
 		"depth": "mystic_waters",
 		"max_hp": 16,
-		"atlas": Vector2i(2, 3),
+		"texture_path": "res://assets/characters/hammerhead_hustler.png",
 		"progression_index": 17,
 	},
 
@@ -188,7 +188,7 @@ const ENEMIES: Dictionary = {
 		"tier": "royal",
 		"depth": "royal_depths",
 		"max_hp": 18,
-		"atlas": Vector2i(3, 3),
+		"texture_path": "res://assets/characters/magic_mermaid.png",
 		"progression_index": 18,
 	},
 	"siren_queen": {
@@ -196,7 +196,7 @@ const ENEMIES: Dictionary = {
 		"tier": "royal",
 		"depth": "royal_depths",
 		"max_hp": 20,
-		"atlas": Vector2i(4, 3),
+		"texture_path": "res://assets/characters/siren_queen.png",
 		"progression_index": 19,
 	},
 	"sea_king": {
@@ -204,7 +204,7 @@ const ENEMIES: Dictionary = {
 		"tier": "royal",
 		"depth": "royal_depths",
 		"max_hp": 22,
-		"atlas": Vector2i(0, 4),
+		"texture_path": "res://assets/characters/sea_king.png",
 		"progression_index": 20,
 	},
 	"poseidon": {
@@ -212,7 +212,7 @@ const ENEMIES: Dictionary = {
 		"tier": "royal",
 		"depth": "royal_depths",
 		"max_hp": 25,
-		"atlas": Vector2i(1, 4),
+		"texture_path": "res://assets/characters/poseidon.png",
 		"progression_index": 21,
 	},
 
@@ -224,7 +224,7 @@ const ENEMIES: Dictionary = {
 		"tier": "final",
 		"depth": "abyss",
 		"max_hp": 30,
-		"atlas": Vector2i(0, 5),
+		"texture_path": "res://assets/characters/cthulhu_of_the_deep.png",
 		"progression_index": 22,
 	},
 }
@@ -246,6 +246,15 @@ const PROGRESSION_ORDER: Array[String] = [
 ## if unknown.
 static func get_enemy(key: String) -> Dictionary:
 	return ENEMIES.get(key, {})
+
+
+## Returns the standalone PNG Texture2D for enemy `key` (loaded directly,
+## never cropped from an atlas), or null if the key/file is missing.
+static func get_texture(key: String) -> Texture2D:
+	var path: String = String(get_enemy(key).get("texture_path", ""))
+	if path == "" or not ResourceLoader.exists(path):
+		return null
+	return load(path) as Texture2D
 
 
 ## Returns the backgrounds.png atlas cell for a given depth (e.g. "surface").

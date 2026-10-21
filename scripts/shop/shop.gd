@@ -5,18 +5,16 @@ extends Control
 ## only ever earned by winning battles.
 
 const HP_UPGRADE_COST: int = 5
+const SHELL_TEXTURE: Texture2D = preload("res://assets/characters/shell.png")
 
 @onready var shells_label: Label = %ShellsLabel
 @onready var list_vbox: VBoxContainer = %ListVBox
 @onready var back_button: Button = %BackButton
 @onready var message_label: Label = %MessageLabel
-@onready var max_hp_label: Label = %MaxHpLabel
-@onready var buy_hp_button: Button = %BuyHpButton
 
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
-	buy_hp_button.pressed.connect(_on_buy_hp_pressed)
 	message_label.visible = false
 	_refresh()
 
@@ -26,13 +24,10 @@ func _on_back_pressed() -> void:
 
 
 func _refresh() -> void:
-	shells_label.text = "🐚 %d Shells" % SaveManager.player_shells
-
-	max_hp_label.text = "❤️ MAX HP: %d" % SaveManager.get_max_hp()
-	buy_hp_button.text = "+1 HP — %d 🐚" % HP_UPGRADE_COST
-	buy_hp_button.disabled = SaveManager.player_shells < HP_UPGRADE_COST
+	shells_label.text = "%d Shells" % SaveManager.player_shells
 
 	_clear_rows()
+	list_vbox.add_child(_build_hp_row())
 	var inventory: Dictionary = SaveManager.get_inventory()
 	for item in ItemData.get_catalog():
 		var key: String = ItemData.id_to_key(item.id)
@@ -55,26 +50,51 @@ func _clear_rows() -> void:
 		child.queue_free()
 
 
+func _build_hp_row() -> Control:
+	var buy_button: Button = Button.new()
+	var panel: Control = _build_card(
+		null,
+		"❤️ HEALTH UPGRADE",
+		"Permanently increase your maximum HP by 1.",
+		"Current Max HP: %d" % SaveManager.get_max_hp(),
+		HP_UPGRADE_COST,
+		buy_button
+	)
+	buy_button.pressed.connect(_on_buy_hp_pressed)
+	return panel
+
+
 func _build_row(item: ItemData, key: String, owned: int) -> Control:
+	var icon_texture: Texture2D = ItemData.get_texture(item.id)
+	var buy_button: Button = Button.new()
+	var title_text: String = item.display_name.to_upper() if icon_texture != null else "%s %s" % [item.icon, item.display_name.to_upper()]
+	var panel: Control = _build_card(
+		icon_texture,
+		title_text,
+		item.description,
+		"Owned: %d" % owned,
+		ItemData.SHOP_COST_SHELLS,
+		buy_button
+	)
+	buy_button.pressed.connect(_on_buy_pressed.bind(key))
+	return panel
+
+
+## Shared card layout for every Shop product (permanent upgrades and items).
+func _build_card(icon_texture: Texture2D, title_text: String, description: String, status_text: String, cost: int, buy_button: Button) -> Control:
 	var panel: PanelContainer = PanelContainer.new()
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.09, 0.18, 0.24, 0.9)
-	style.set_corner_radius_all(16)
-	style.content_margin_left = 16.0
-	style.content_margin_right = 16.0
-	style.content_margin_top = 16.0
-	style.content_margin_bottom = 16.0
-	panel.add_theme_stylebox_override("panel", style)
+	panel.theme_type_variation = &"LightPanel"
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	panel.add_child(row)
 
-	var icon_texture: AtlasTexture = ItemData.get_atlas_texture(item.id)
 	if icon_texture != null:
 		var icon: TextureRect = TextureRect.new()
 		icon.texture = icon_texture
-		icon.custom_minimum_size = Vector2(64, 64)
+		icon.custom_minimum_size = Vector2(96, 96)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		row.add_child(icon)
@@ -84,38 +104,52 @@ func _build_row(item: ItemData, key: String, owned: int) -> Control:
 	row.add_child(info_box)
 
 	var title: Label = Label.new()
-	title.text = item.display_name.to_upper() if icon_texture != null else "%s %s" % [item.icon, item.display_name.to_upper()]
+	title.text = title_text
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(0.05, 0.14, 0.27, 1.0))
 	info_box.add_child(title)
 
 	var desc: Label = Label.new()
-	desc.text = item.description
+	desc.text = description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 20)
-	desc.add_theme_color_override("font_color", Color(0.68, 0.73, 0.74, 1.0))
+	desc.add_theme_font_size_override("font_size", 22)
+	desc.add_theme_color_override("font_color", Color(0.12, 0.2, 0.32, 1.0))
 	info_box.add_child(desc)
 
 	var cost_row: HBoxContainer = HBoxContainer.new()
 	cost_row.add_theme_constant_override("separation", 12)
 	info_box.add_child(cost_row)
 
+	var cost_box: HBoxContainer = HBoxContainer.new()
+	cost_box.add_theme_constant_override("separation", 6)
+	cost_row.add_child(cost_box)
+
+	var cost_icon: TextureRect = TextureRect.new()
+	cost_icon.texture = SHELL_TEXTURE
+	cost_icon.custom_minimum_size = Vector2(32, 32)
+	cost_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	cost_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	cost_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cost_box.add_child(cost_icon)
+
 	var cost_label: Label = Label.new()
-	cost_label.text = "%d 🐚" % ItemData.SHOP_COST_SHELLS
+	cost_label.text = "%d" % cost
 	cost_label.add_theme_font_size_override("font_size", 24)
-	cost_label.add_theme_color_override("font_color", Color(0.941176, 0.760784, 0.239216, 1))
-	cost_row.add_child(cost_label)
+	cost_label.add_theme_color_override("font_color", Color(0.72, 0.42, 0.05, 1))
+	cost_box.add_child(cost_label)
 
-	var owned_label: Label = Label.new()
-	owned_label.text = "Owned: %d" % owned
-	owned_label.add_theme_font_size_override("font_size", 22)
-	owned_label.add_theme_color_override("font_color", Color(0.678431, 0.72549, 0.741176, 1))
-	cost_row.add_child(owned_label)
+	var status_label: Label = Label.new()
+	status_label.text = status_text
+	status_label.add_theme_font_size_override("font_size", 22)
+	status_label.add_theme_color_override("font_color", Color(0.2, 0.3, 0.4, 1))
+	cost_row.add_child(status_label)
 
-	var buy_button: Button = Button.new()
+	buy_button.theme_type_variation = &"BuyButton"
 	buy_button.text = "BUY"
 	buy_button.custom_minimum_size = Vector2(120, 64)
+	buy_button.disabled = SaveManager.player_shells < cost
 	buy_button.add_theme_font_size_override("font_size", 26)
-	buy_button.pressed.connect(_on_buy_pressed.bind(key))
 	row.add_child(buy_button)
 
 	return panel

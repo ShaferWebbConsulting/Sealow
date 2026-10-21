@@ -1,9 +1,12 @@
-[gd_scene load_steps=13 format=3 uid="uid://ce4l53xn63f65"]
+[gd_scene load_steps=16 format=3 uid="uid://ce4l53xn63f65"]
 
 [ext_resource type="Script" path="res://scripts/battle/battle_manager.gd" id="1_sm8f8"]
 [ext_resource type="Theme" uid="uid://b6q1s0p8m2w3x" path="res://assets/theme/sealow_theme.tres" id="2_theme"]
 [ext_resource type="PackedScene" path="res://scenes/ui/Dice.tscn" id="3_dice"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ItemPopup.tscn" id="4_itempopup"]
+[ext_resource type="Texture2D" path="res://assets/characters/backgroun_main.png" id="bg_main_tex"]
+[ext_resource type="Texture2D" path="res://assets/characters/sealow_title.png" id="logo_tex"]
+[ext_resource type="Texture2D" path="res://assets/characters/shell.png" id="shell_tex"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_seafloor"]
 bg_color = Color(0.0196078, 0.0588235, 0.0941176, 1)
@@ -444,6 +447,7 @@ text = "ITEM"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
+theme_type_variation = &"DangerButton"
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
 text = "RUN"
@@ -505,10 +509,22 @@ theme_override_font_sizes/font_size = 24
 text = "The Crab retreats!"
 horizontal_alignment = 1
 
-[node name="ShellsEarnedLabel" type="Label" parent="VictoryPanel/Center/Panel/VBox"]
-unique_name_in_owner = true
+[node name="ShellsEarnedLabelRow" type="HBoxContainer" parent="VictoryPanel/Center/Panel/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_constants/separation = 10
+
+[node name="ShellIcon" type="TextureRect" parent="VictoryPanel/Center/Panel/VBox/ShellsEarnedLabelRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("shell_tex")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ShellsEarnedLabel" type="Label" parent="VictoryPanel/Center/Panel/VBox/ShellsEarnedLabelRow"]
+unique_name_in_owner = true
+layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "+10 Shells"
 horizontal_alignment = 1
@@ -665,45 +681,58 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0117647, 0.0470588, 0.0784314, 0.85)
 
-[node name="Center" type="CenterContainer" parent="RunConfirmPanel"]
+[node name="Margin" type="MarginContainer" parent="RunConfirmPanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
 
-[node name="Panel" type="PanelContainer" parent="RunConfirmPanel/Center"]
+[node name="Panel" type="PanelContainer" parent="RunConfirmPanel/Margin"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+size_flags_vertical = 4
 
-[node name="VBox" type="VBoxContainer" parent="RunConfirmPanel/Center/Panel"]
+[node name="VBox" type="VBoxContainer" parent="RunConfirmPanel/Margin/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 24
 
-[node name="Title" type="Label" parent="RunConfirmPanel/Center/Panel/VBox"]
+[node name="Title" type="Label" parent="RunConfirmPanel/Margin/Panel/VBox"]
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
-text = "Leave this battle?"
+theme_override_font_sizes/font_size = 32
+text = "RUN AWAY?"
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="StayButton" type="Button" parent="RunConfirmPanel/Center/Panel/VBox"]
+[node name="Description" type="Label" parent="RunConfirmPanel/Margin/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Leave this battle and return to enemy selection?"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="RunConfirmPanel/Margin/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="StayButton" type="Button" parent="RunConfirmPanel/Margin/Panel/VBox/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 26
 text = "STAY"
 
-[node name="ConfirmRunButton" type="Button" parent="RunConfirmPanel/Center/Panel/VBox"]
+[node name="ConfirmRunButton" type="Button" parent="RunConfirmPanel/Margin/Panel/VBox/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
-text = "RUN"
+theme_type_variation = &"DangerButton"
+theme_override_font_sizes/font_size = 26
+text = "RUN AWAY"
 
 [node name="RulesPanel" type="Control" parent="."]
 unique_name_in_owner = true
@@ -715,6 +744,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="Background" type="TextureRect" parent="RulesPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("bg_main_tex")
+expand_mode = 1
+stretch_mode = 6
+
 [node name="Dim" type="ColorRect" parent="RulesPanel"]
 layout_mode = 1
 anchors_preset = 15
@@ -722,7 +763,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.0117647, 0.0470588, 0.0784314, 0.94)
+color = Color(0.0117647, 0.0470588, 0.0784314, 0.6)
 
 [node name="SafeArea" type="MarginContainer" parent="RulesPanel"]
 layout_mode = 1
@@ -731,63 +772,111 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 28
+theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 64
-theme_override_constants/margin_right = 28
+theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 40
 
 [node name="VBox" type="VBoxContainer" parent="RulesPanel/SafeArea"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
+[node name="Logo" type="TextureRect" parent="RulesPanel/SafeArea/VBox"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+texture = ExtResource("logo_tex")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Title" type="Label" parent="RulesPanel/SafeArea/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 32
-text = "HOW TO PLAY"
+theme_override_font_sizes/font_size = 40
+text = "RULES"
 horizontal_alignment = 1
 
-[node name="Scroll" type="ScrollContainer" parent="RulesPanel/SafeArea/VBox"]
+[node name="InfoPanel" type="PanelContainer" parent="RulesPanel/SafeArea/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_type_variation = &"LightPanel"
 
-[node name="Body" type="Label" parent="RulesPanel/SafeArea/VBox/Scroll"]
+[node name="Scroll" type="ScrollContainer" parent="RulesPanel/SafeArea/VBox/InfoPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Body" type="VBoxContainer" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 19
-theme_override_constants/line_spacing = 6
-text = "Each round, you and the Crab both roll 3 dice.
-Whoever rolls the stronger hand wins the round and damages the other.
+theme_override_constants/separation = 10
 
-HAND STRENGTH (weakest → strongest)
-💀 WASHED OUT (1•2•3) — weakest, auto-loses.
-🎯 PAIR + POINT — a matching pair plus an odd die. Higher pair wins; ties break on the odd die.
-🎲 TRIPLE — three matching dice. Higher triple wins.
-🌊 TIDAL ROLL (4•5•6) — strongest possible hand.
-No-point rolls (no pair, triple, or tidal) automatically reroll.
+[node name="Head0" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.38, 0.05, 1)
+theme_override_font_sizes/font_size = 32
+text = "HOW TO PLAY"
 
-⚔️ HOW DAMAGE WORKS
-🌊 TIDAL / AUTOMATIC WIN — Deals 3 HP. (Rolling Tidal, or your opponent Washing Out, is an automatic win.)
-🎲 TRIPLES — Deals 2 HP.
-🎯 PAIR + POINT — Deals 1 HP.
-🤝 TIE — No damage. Roll again.
+[node name="Text0" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.05, 0.14, 0.27, 1)
+theme_override_font_sizes/font_size = 24
+text = "Each round, you and your opponent both roll 3 dice. The stronger hand wins the round and deals damage. Reduce your opponent to 0 HP to win the battle."
+autowrap_mode = 3
 
-Reduce your opponent to 0 HP to win the battle.
+[node name="Sep1" type="HSeparator" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
 
-🎒 ITEMS
-Items can change the outcome of combat — use one from the ITEM menu:
-🐢 Turtle Shield — turns a defeat into a draw.
-🔱 Trident — +2 damage on your next successful hit.
-🧜 Mermaid Scale — restore 2 HP."
-horizontal_alignment = 1
-autowrap_mode = 2
+[node name="Head1" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.38, 0.05, 1)
+theme_override_font_sizes/font_size = 32
+text = "HAND STRENGTH"
+
+[node name="Text1" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.05, 0.14, 0.27, 1)
+theme_override_font_sizes/font_size = 24
+text = "Weakest to strongest:\n💀 WASHED OUT (1•2•3) — auto-loses.\n🎯 PAIR + POINT — higher pair wins; ties break on the odd die.\n🎲 TRIPLE — higher triple wins.\n🌊 TIDAL ROLL (4•5•6) — strongest.\nNo-point rolls reroll automatically."
+autowrap_mode = 3
+
+[node name="Sep2" type="HSeparator" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+
+[node name="Head2" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.38, 0.05, 1)
+theme_override_font_sizes/font_size = 32
+text = "DAMAGE"
+
+[node name="Text2" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.05, 0.14, 0.27, 1)
+theme_override_font_sizes/font_size = 24
+text = "🌊 Tidal / automatic win — 3 HP\n🎲 Triple — 2 HP\n🎯 Pair + point — 1 HP\n🤝 Tie — no damage, roll again."
+autowrap_mode = 3
+
+[node name="Sep3" type="HSeparator" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+
+[node name="Head3" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.38, 0.05, 1)
+theme_override_font_sizes/font_size = 32
+text = "ITEMS"
+
+[node name="Text3" type="Label" parent="RulesPanel/SafeArea/VBox/InfoPanel/Scroll/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.05, 0.14, 0.27, 1)
+theme_override_font_sizes/font_size = 24
+text = "Use items from the ITEM menu:\n🐢 Turtle Shield — turns a defeat into a draw.\n🔱 Trident — +2 damage on your next hit.\n🧜 Mermaid Scale — restore 2 HP."
+autowrap_mode = 3
 
 [node name="RulesCloseButton" type="Button" parent="RulesPanel/SafeArea/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 68)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 28
 text = "← BACK"
 
 [node name="ItemPopup" parent="." instance=ExtResource("4_itempopup")]
@@ -800,79 +889,3 @@ grow_horizontal = 2
 grow_vertical = 2
 
 
-[node name="SeaweedRetryPanel" type="Control" parent="."]
-unique_name_in_owner = true
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Dim" type="ColorRect" parent="SeaweedRetryPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.0117647, 0.0470588, 0.0784314, 0.9)
-
-[node name="Center" type="CenterContainer" parent="SeaweedRetryPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Panel" type="PanelContainer" parent="SeaweedRetryPanel/Center"]
-custom_minimum_size = Vector2(360, 0)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
-
-[node name="VBox" type="VBoxContainer" parent="SeaweedRetryPanel/Center/Panel"]
-layout_mode = 2
-theme_override_constants/separation = 18
-
-[node name="Title" type="Label" parent="SeaweedRetryPanel/Center/Panel/VBox"]
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 30
-text = "🌿 CIRCLE OF SEAWEED"
-horizontal_alignment = 1
-
-[node name="Subtitle" type="Label" parent="SeaweedRetryPanel/Center/Panel/VBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 21
-text = "The current pulls you back!
-
-Retry this battle from full HP?"
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="SeaweedOwnedLabel" type="Label" parent="SeaweedRetryPanel/Center/Panel/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 20
-text = "Owned: 1"
-horizontal_alignment = 1
-
-[node name="UseSeaweedButton" type="Button" parent="SeaweedRetryPanel/Center/Panel/VBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
-text = "🌿 USE & RETRY"
-
-[node name="DeclineSeaweedButton" type="Button" parent="SeaweedRetryPanel/Center/Panel/VBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 64)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
-text = "ACCEPT DEFEAT"

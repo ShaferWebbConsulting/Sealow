@@ -12,7 +12,6 @@ extends Control
 ## Saves everything through SaveManager and continues to Main Menu.
 
 const PlayerDataScript = preload("res://scripts/player/player_data.gd")
-const SeaLowAtlasScript = preload("res://scripts/assets/sea_low_atlas.gd")
 
 @onready var step1: Control = %Step1
 @onready var step2: Control = %Step2
@@ -64,9 +63,7 @@ func _build_creature_buttons() -> void:
 		var button: Button = Button.new()
 
 		button.text = PlayerDataScript.get_display_name(creature_key)
-		button.icon = SeaLowAtlasScript.get_character_texture(
-			PlayerDataScript.get_atlas_cell(creature_key)
-		)
+		button.icon = PlayerDataScript.get_texture(creature_key)
 		button.expand_icon = true
 		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
@@ -182,9 +179,7 @@ func _update_start_button() -> void:
 
 
 func _update_preview() -> void:
-	preview_emoji.texture = SeaLowAtlasScript.get_character_texture(
-		PlayerDataScript.get_atlas_cell(_selected_creature)
-	)
+	preview_emoji.texture = PlayerDataScript.get_texture(_selected_creature)
 
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 
