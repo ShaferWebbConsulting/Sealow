@@ -1,9 +1,11 @@
-[gd_scene load_steps=13 format=3 uid="uid://ce4l53xn63f65"]
+[gd_scene load_steps=15 format=3 uid="uid://ce4l53xn63f65"]
 
 [ext_resource type="Script" path="res://scripts/battle/battle_manager.gd" id="1_sm8f8"]
 [ext_resource type="Theme" uid="uid://b6q1s0p8m2w3x" path="res://assets/theme/sealow_theme.tres" id="2_theme"]
 [ext_resource type="PackedScene" path="res://scenes/ui/Dice.tscn" id="3_dice"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ItemPopup.tscn" id="4_itempopup"]
+[ext_resource type="Texture2D" path="res://assets/characters/backgroun_main.png" id="bg_main_tex"]
+[ext_resource type="Texture2D" path="res://assets/characters/sealow_title.png" id="logo_tex"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_seafloor"]
 bg_color = Color(0.0196078, 0.0588235, 0.0941176, 1)
@@ -739,6 +741,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="Background" type="TextureRect" parent="RulesPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("bg_main_tex")
+expand_mode = 1
+stretch_mode = 6
+
 [node name="Dim" type="ColorRect" parent="RulesPanel"]
 layout_mode = 1
 anchors_preset = 15
@@ -746,7 +760,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.0117647, 0.0470588, 0.0784314, 0.94)
+color = Color(0.0117647, 0.0470588, 0.0784314, 0.6)
 
 [node name="SafeArea" type="MarginContainer" parent="RulesPanel"]
 layout_mode = 1
@@ -763,6 +777,13 @@ theme_override_constants/margin_bottom = 40
 [node name="VBox" type="VBoxContainer" parent="RulesPanel/SafeArea"]
 layout_mode = 2
 theme_override_constants/separation = 16
+
+[node name="Logo" type="TextureRect" parent="RulesPanel/SafeArea/VBox"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+texture = ExtResource("logo_tex")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Title" type="Label" parent="RulesPanel/SafeArea/VBox"]
 layout_mode = 2
