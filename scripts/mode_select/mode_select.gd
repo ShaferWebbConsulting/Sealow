@@ -26,6 +26,8 @@ func _ready() -> void:
 func _decorate(button: Button, depth: String, enemy_key: String, title: String, subtitle: String) -> void:
 	button.text = ""
 	button.clip_contents = true
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 
 	var bg: TextureRect = TextureRect.new()
 	bg.texture = SeaLowAtlasScript.get_background_texture(EnemyDataScript.get_background_cell(depth))
