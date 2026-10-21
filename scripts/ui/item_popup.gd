@@ -56,11 +56,11 @@ func _build_row(item: ItemData, count: int, disabled_reason: String) -> Control:
 	row.add_theme_constant_override("separation", 12)
 	panel.add_child(row)
 
-	var icon_texture: AtlasTexture = ItemData.get_atlas_texture(item.id)
+	var icon_texture: Texture2D = ItemData.get_texture(item.id)
 	if icon_texture != null:
 		var icon: TextureRect = TextureRect.new()
 		icon.texture = icon_texture
-		icon.custom_minimum_size = Vector2(64, 64)
+		icon.custom_minimum_size = Vector2(96, 96)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		row.add_child(icon)

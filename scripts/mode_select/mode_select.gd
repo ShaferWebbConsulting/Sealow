@@ -49,7 +49,7 @@ func _decorate(button: Button, depth: String, enemy_key: String, title: String, 
 	button.add_child(box)
 
 	var portrait: TextureRect = TextureRect.new()
-	portrait.texture = SeaLowAtlasScript.get_character_portrait(EnemyDataScript.get_enemy(enemy_key)["atlas"], 0.85)
+	portrait.texture = EnemyDataScript.get_texture(enemy_key)
 	portrait.custom_minimum_size = Vector2(0, 190)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

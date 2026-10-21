@@ -31,15 +31,14 @@ const DEFAULT_SAVE: Dictionary = {
 
 ## Metadata for each selectable starter creature. Gameplay stats are
 ## intentionally identical for all of them in v0.2 — this is a cosmetic /
-## identity choice only. `atlas` points at the matching cell in
-## charactersList.png (Row 1 — Starter/Surface) so Character Select and
-## Battle can render real art instead of an emoji glyph.
+## identity choice only. `texture` is the standalone PNG used by Character
+## Select and Battle instead of an emoji glyph.
 const CHARACTER_TYPES: Dictionary = {
-	"octopus": {"emoji": "🐙", "display_name": "Little Octo", "atlas": Vector2i(0, 0)},
-	"crab": {"emoji": "🦀", "display_name": "Little Crab", "atlas": Vector2i(1, 0)},
-	"shrimp": {"emoji": "🦐", "display_name": "Little Shrimp", "atlas": Vector2i(2, 0)},
-	"fish": {"emoji": "🐟", "display_name": "Little Fish", "atlas": Vector2i(3, 0)},
-	"SeaSnake": {"emoji": "🐍", "display_name": "Snake coming soon...", "atlas": Vector2i(4, 1)},
+	"octopus": {"emoji": "🐙", "display_name": "Little Octo", "texture": "res://assets/characters/little_octo.png"},
+	"crab": {"emoji": "🦀", "display_name": "Little Crab", "texture": "res://assets/characters/little_crab.png"},
+	"shrimp": {"emoji": "🦐", "display_name": "Little Shrimp", "texture": "res://assets/characters/little_shrimp.png"},
+	"fish": {"emoji": "🐟", "display_name": "Little Fish", "texture": "res://assets/characters/little_fish.png"},
+	"SeaSnake": {"emoji": "🐍", "display_name": "Snake coming soon...", "texture": "res://assets/characters/sea_snake.png"},
 	#TODO IMPLEMENT SNAKE
 
 }
@@ -74,11 +73,13 @@ static func get_emoji(character_type: String) -> String:
 	return info["emoji"]
 
 
-## charactersList.png atlas cell (zero-based Vector2i(column, row)) for the
-## given playable creature. Use with SeaLowAtlas.get_character_texture().
-static func get_atlas_cell(character_type: String) -> Vector2i:
+## Standalone PNG Texture2D for the given playable creature (null if missing).
+static func get_texture(character_type: String) -> Texture2D:
 	var info: Dictionary = CHARACTER_TYPES.get(character_type, CHARACTER_TYPES["octopus"])
-	return info.get("atlas", Vector2i(0, 0))
+	var path: String = String(info.get("texture", ""))
+	if path == "" or not ResourceLoader.exists(path):
+		return null
+	return load(path) as Texture2D
 
 
 static func get_display_name(character_type: String) -> String:

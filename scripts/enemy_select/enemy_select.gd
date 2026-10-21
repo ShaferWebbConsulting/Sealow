@@ -117,10 +117,10 @@ func _build_card(enemy_key: String, enemy: Dictionary) -> Control:
 	vbox.add_theme_constant_override("separation", 6)
 	panel.add_child(vbox)
 
-	# Cropped atlas sprite. Dimmed (but still visible) when locked, so the
+	# Standalone PNG sprite. Dimmed (but still visible) when locked, so the
 	# player can preview what's coming without being able to select it.
 	var icon: TextureRect = TextureRect.new()
-	icon.texture = SeaLowAtlasScript.get_character_texture(enemy["atlas"])
+	icon.texture = EnemyDataScript.get_texture(enemy_key)
 	icon.custom_minimum_size = Vector2(0, 128)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

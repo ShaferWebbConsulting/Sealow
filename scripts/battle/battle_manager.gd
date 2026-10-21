@@ -221,9 +221,7 @@ func _setup_player_character() -> void:
 	player_character_type = SaveManager.get_character_type()
 	player_max_hp = SaveManager.get_max_hp()
 
-	player_sprite.texture = SeaLowAtlasScript.get_character_texture(
-		PlayerDataScript.get_atlas_cell(player_character_type)
-	)
+	player_sprite.texture = PlayerDataScript.get_texture(player_character_type)
 
 	var player_name: String = SaveManager.get_player_name()
 
@@ -260,9 +258,7 @@ func _setup_enemy() -> void:
 
 	enemy_max_hp = int(enemy_data["max_hp"])
 
-	enemy_sprite.texture = SeaLowAtlasScript.get_character_texture(
-		enemy_data["atlas"]
-	)
+	enemy_sprite.texture = EnemyDataScript.get_texture(enemy_key)
 
 	enemy_name_label.text = String(enemy_data["display_name"]).to_upper()
 

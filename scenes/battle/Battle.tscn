@@ -40,6 +40,17 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.243137, 0.482353, 0.556863, 0.6)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_runcard"]
+bg_color = Color(0.0784314, 0.156863, 0.207843, 0.95)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+content_margin_left = 28.0
+content_margin_top = 28.0
+content_margin_right = 28.0
+content_margin_bottom = 28.0
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 bg_color = Color(0.0784314, 0.156863, 0.207843, 0.82)
 corner_radius_top_left = 18
@@ -665,44 +676,57 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0117647, 0.0470588, 0.0784314, 0.85)
 
-[node name="Center" type="CenterContainer" parent="RunConfirmPanel"]
+[node name="Margin" type="MarginContainer" parent="RunConfirmPanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
 
-[node name="Panel" type="PanelContainer" parent="RunConfirmPanel/Center"]
+[node name="Panel" type="PanelContainer" parent="RunConfirmPanel/Margin"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_runcard")
 
-[node name="VBox" type="VBoxContainer" parent="RunConfirmPanel/Center/Panel"]
+[node name="VBox" type="VBoxContainer" parent="RunConfirmPanel/Margin/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 24
 
-[node name="Title" type="Label" parent="RunConfirmPanel/Center/Panel/VBox"]
+[node name="Title" type="Label" parent="RunConfirmPanel/Margin/Panel/VBox"]
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
-text = "Leave this battle?"
+theme_override_font_sizes/font_size = 32
+text = "RUN AWAY?"
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="StayButton" type="Button" parent="RunConfirmPanel/Center/Panel/VBox"]
+[node name="Description" type="Label" parent="RunConfirmPanel/Margin/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Leave this battle and return to enemy selection?"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="RunConfirmPanel/Margin/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="StayButton" type="Button" parent="RunConfirmPanel/Margin/Panel/VBox/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 26
 text = "STAY"
 
-[node name="ConfirmRunButton" type="Button" parent="RunConfirmPanel/Center/Panel/VBox"]
+[node name="ConfirmRunButton" type="Button" parent="RunConfirmPanel/Margin/Panel/VBox/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 26
 text = "RUN"
 
 [node name="RulesPanel" type="Control" parent="."]
@@ -731,9 +755,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 28
+theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 64
-theme_override_constants/margin_right = 28
+theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 40
 
 [node name="VBox" type="VBoxContainer" parent="RulesPanel/SafeArea"]
@@ -743,8 +767,8 @@ theme_override_constants/separation = 16
 [node name="Title" type="Label" parent="RulesPanel/SafeArea/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 32
-text = "HOW TO PLAY"
+theme_override_font_sizes/font_size = 40
+text = "RULES"
 horizontal_alignment = 1
 
 [node name="Scroll" type="ScrollContainer" parent="RulesPanel/SafeArea/VBox"]
@@ -752,10 +776,11 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="Body" type="Label" parent="RulesPanel/SafeArea/VBox/Scroll"]
+custom_minimum_size = Vector2(640, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 19
-theme_override_constants/line_spacing = 6
+theme_override_font_sizes/font_size = 22
+theme_override_constants/line_spacing = 8
 text = "Each round, you and the Crab both roll 3 dice.
 Whoever rolls the stronger hand wins the round and damages the other.
 
@@ -779,15 +804,15 @@ Items can change the outcome of combat — use one from the ITEM menu:
 🐢 Turtle Shield — turns a defeat into a draw.
 🔱 Trident — +2 damage on your next successful hit.
 🧜 Mermaid Scale — restore 2 HP."
-horizontal_alignment = 1
-autowrap_mode = 2
+horizontal_alignment = 0
+autowrap_mode = 3
 
 [node name="RulesCloseButton" type="Button" parent="RulesPanel/SafeArea/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 68)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 28
 text = "← BACK"
 
 [node name="ItemPopup" parent="." instance=ExtResource("4_itempopup")]
