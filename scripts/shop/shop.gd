@@ -82,15 +82,9 @@ func _build_row(item: ItemData, key: String, owned: int) -> Control:
 ## Shared card layout for every Shop product (permanent upgrades and items).
 func _build_card(icon_texture: Texture2D, title_text: String, description: String, status_text: String, cost: int, buy_button: Button) -> Control:
 	var panel: PanelContainer = PanelContainer.new()
+	panel.theme_type_variation = &"LightPanel"
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.09, 0.18, 0.24, 0.9)
-	style.set_corner_radius_all(16)
-	style.content_margin_left = 16.0
-	style.content_margin_right = 16.0
-	style.content_margin_top = 16.0
-	style.content_margin_bottom = 16.0
-	panel.add_theme_stylebox_override("panel", style)
 
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
@@ -112,13 +106,14 @@ func _build_card(icon_texture: Texture2D, title_text: String, description: Strin
 	title.text = title_text
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(0.05, 0.14, 0.27, 1.0))
 	info_box.add_child(title)
 
 	var desc: Label = Label.new()
 	desc.text = description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.add_theme_font_size_override("font_size", 22)
-	desc.add_theme_color_override("font_color", Color(0.68, 0.73, 0.74, 1.0))
+	desc.add_theme_color_override("font_color", Color(0.12, 0.2, 0.32, 1.0))
 	info_box.add_child(desc)
 
 	var cost_row: HBoxContainer = HBoxContainer.new()
@@ -128,15 +123,16 @@ func _build_card(icon_texture: Texture2D, title_text: String, description: Strin
 	var cost_label: Label = Label.new()
 	cost_label.text = "%d 🐚" % cost
 	cost_label.add_theme_font_size_override("font_size", 24)
-	cost_label.add_theme_color_override("font_color", Color(0.941176, 0.760784, 0.239216, 1))
+	cost_label.add_theme_color_override("font_color", Color(0.72, 0.42, 0.05, 1))
 	cost_row.add_child(cost_label)
 
 	var status_label: Label = Label.new()
 	status_label.text = status_text
 	status_label.add_theme_font_size_override("font_size", 22)
-	status_label.add_theme_color_override("font_color", Color(0.678431, 0.72549, 0.741176, 1))
+	status_label.add_theme_color_override("font_color", Color(0.2, 0.3, 0.4, 1))
 	cost_row.add_child(status_label)
 
+	buy_button.theme_type_variation = &"BuyButton"
 	buy_button.text = "BUY"
 	buy_button.custom_minimum_size = Vector2(120, 64)
 	buy_button.disabled = SaveManager.player_shells < cost

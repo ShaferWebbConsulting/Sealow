@@ -43,14 +43,7 @@ func _clear_rows() -> void:
 
 func _build_row(item: ItemData, count: int, disabled_reason: String) -> Control:
 	var panel: PanelContainer = PanelContainer.new()
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.09, 0.18, 0.24, 0.9)
-	style.set_corner_radius_all(14)
-	style.content_margin_left = 14.0
-	style.content_margin_right = 14.0
-	style.content_margin_top = 16.0
-	style.content_margin_bottom = 16.0
-	panel.add_theme_stylebox_override("panel", style)
+	panel.theme_type_variation = &"LightPanel"
 
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
@@ -73,13 +66,14 @@ func _build_row(item: ItemData, count: int, disabled_reason: String) -> Control:
 	var count_suffix: String = " (x%d)" % count if count > 0 else " (none left)"
 	title.text = "%s%s" % [item.display_name, count_suffix] if icon_texture != null else "%s %s%s" % [item.icon, item.display_name, count_suffix]
 	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(0.05, 0.14, 0.27, 1.0))
 	info_box.add_child(title)
 
 	var desc: Label = Label.new()
 	desc.text = item.description if disabled_reason.is_empty() else item.description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.add_theme_font_size_override("font_size", 20)
-	desc.add_theme_color_override("font_color", Color(0.68, 0.73, 0.74, 1.0))
+	desc.add_theme_color_override("font_color", Color(0.12, 0.2, 0.32, 1.0))
 	info_box.add_child(desc)
 
 	if not disabled_reason.is_empty():
@@ -88,10 +82,11 @@ func _build_row(item: ItemData, count: int, disabled_reason: String) -> Control:
 		reason.text = disabled_reason
 		reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		reason.add_theme_font_size_override("font_size", 20)
-		reason.add_theme_color_override("font_color", Color(0.94, 0.76, 0.24, 1))
+		reason.add_theme_color_override("font_color", Color(0.72, 0.38, 0.05, 1))
 		info_box.add_child(reason)
 
 	var use_button: Button = Button.new()
+	use_button.theme_type_variation = &"BuyButton"
 	use_button.text = "USE"
 	use_button.custom_minimum_size = Vector2(120, 64)
 	use_button.add_theme_font_size_override("font_size", 26)

@@ -47,6 +47,7 @@ func _build_section(depth: String) -> GridContainer:
 	var section: PanelContainer = PanelContainer.new()
 	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	section.clip_contents = true
+	section.mouse_filter = Control.MOUSE_FILTER_PASS
 	section.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 	var bg: TextureRect = TextureRect.new()
@@ -102,10 +103,13 @@ func _build_card(enemy_key: String, enemy: Dictionary) -> Control:
 	var panel: PanelContainer = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(0, 340)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.05, 0.12, 0.18, 0.88)
-	style.set_corner_radius_all(16)
+	style.set_corner_radius_all(20)
+	style.set_border_width_all(3)
+	style.border_color = Color(0.88, 0.66, 0.28, 0.9)
 	style.content_margin_left = 12.0
 	style.content_margin_right = 12.0
 	style.content_margin_top = 12.0
@@ -168,6 +172,7 @@ func _build_card(enemy_key: String, enemy: Dictionary) -> Control:
 	select_button.text = "SELECT"
 	select_button.custom_minimum_size = Vector2(0, 64)
 	select_button.disabled = not unlocked
+	select_button.theme_type_variation = &"GoldButton"
 	select_button.pressed.connect(_on_select_pressed.bind(enemy_key))
 	vbox.add_child(select_button)
 

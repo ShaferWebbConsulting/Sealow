@@ -45,7 +45,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.0117647, 0.0470588, 0.0784314, 0.15)
+color = Color(0.0117647, 0.0470588, 0.0784314, 0.0)
 
 [node name="SafeArea" type="MarginContainer" parent="." unique_id=1893977074]
 layout_mode = 1
@@ -55,14 +55,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 96
+theme_override_constants/margin_top = 64
 theme_override_constants/margin_right = 40
-theme_override_constants/margin_bottom = 64
+theme_override_constants/margin_bottom = 120
 
 [node name="Content" type="VBoxContainer" parent="SafeArea" unique_id=222101059]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 24
+theme_override_constants/separation = 20
 
 [node name="Spacer" type="Control" parent="SafeArea/Content" unique_id=696166480]
 layout_mode = 2
@@ -70,21 +70,18 @@ size_flags_vertical = 3
 
 [node name="ContinueButton" type="Button" parent="SafeArea/Content" unique_id=1629436972]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 84)
 layout_mode = 2
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 32
 text = "CONTINUE"
 
 [node name="NewDiveButton" type="Button" parent="SafeArea/Content" unique_id=1470229609]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 84)
 layout_mode = 2
-theme_override_font_sizes/font_size = 34
+theme_type_variation = &"GoldButton"
+theme_override_font_sizes/font_size = 32
 text = "NEW DIVE"
-
-[node name="SpacerBottom" type="Control" parent="SafeArea/Content" unique_id=669773023]
-layout_mode = 2
-size_flags_vertical = 3
 
 [node name="ConfirmPanel" type="Control" parent="." unique_id=305955013]
 unique_name_in_owner = true
@@ -105,45 +102,45 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0117647, 0.0470588, 0.0784314, 0.9)
 
-[node name="Center" type="CenterContainer" parent="ConfirmPanel" unique_id=1253189599]
+[node name="Margin" type="MarginContainer" parent="ConfirmPanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
 
-[node name="Panel" type="PanelContainer" parent="ConfirmPanel/Center" unique_id=506844207]
+[node name="Panel" type="PanelContainer" parent="ConfirmPanel/Margin"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+size_flags_vertical = 4
 
-[node name="VBox" type="VBoxContainer" parent="ConfirmPanel/Center/Panel" unique_id=1285542129]
+[node name="VBox" type="VBoxContainer" parent="ConfirmPanel/Margin/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 22
 
-[node name="Title" type="Label" parent="ConfirmPanel/Center/Panel/VBox" unique_id=443224648]
+[node name="Title" type="Label" parent="ConfirmPanel/Margin/Panel/VBox"]
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
-text = "START A NEW DIVE?"
+theme_override_colors/font_color = Color(1, 0.9, 0.55, 1)
+theme_override_font_sizes/font_size = 32
+text = "🐚 START A NEW DIVE? 🐚"
 horizontal_alignment = 1
-autowrap_mode = 2
+autowrap_mode = 3
 
-[node name="Body" type="Label" parent="ConfirmPanel/Center/Panel/VBox" unique_id=2046097608]
+[node name="Body" type="Label" parent="ConfirmPanel/Margin/Panel/VBox"]
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_colors/font_color = Color(0.678431, 0.72549, 0.741176, 1)
-theme_override_font_sizes/font_size = 20
-text = "This will erase your current:
-
-Character
-Shells
-Items
-Progress"
+theme_override_colors/font_color = Color(0.88, 0.95, 0.98, 1)
+theme_override_font_sizes/font_size = 24
+text = "This will erase your current character, shells, items and progress."
 horizontal_alignment = 1
-autowrap_mode = 2
+autowrap_mode = 3
 
-[node name="ConfirmCancelButton" type="Button" parent="ConfirmPanel/Center/Panel/VBox" unique_id=545533683]
+[node name="Buttons" type="HBoxContainer" parent="ConfirmPanel/Margin/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ConfirmCancelButton" type="Button" parent="ConfirmPanel/Margin/Panel/VBox/Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
@@ -151,10 +148,11 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "CANCEL"
 
-[node name="ConfirmStartNewButton" type="Button" parent="ConfirmPanel/Center/Panel/VBox" unique_id=1180063667]
+[node name="ConfirmStartNewButton" type="Button" parent="ConfirmPanel/Margin/Panel/VBox/Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"DangerButton"
 theme_override_font_sizes/font_size = 24
-text = "START NEW"
+text = "START NEW DIVE"
