@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/shop/shop.gd" id="1_shop"]
 [ext_resource type="Theme" uid="uid://b6q1s0p8m2w3x" path="res://assets/theme/sealow_theme.tres" id="2_theme"]
 [ext_resource type="Texture2D" path="res://assets/characters/backgroun_main.png" id="bg_tex"]
 [ext_resource type="Texture2D" path="res://assets/characters/sealow_title.png" id="logo_tex"]
+[ext_resource type="Texture2D" path="res://assets/characters/shell.png" id="shell_tex"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_shells"]
 bg_color = Color(0.0784314, 0.156863, 0.207843, 0.85)
@@ -83,12 +84,24 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_shells")
 
-[node name="ShellsLabel" type="Label" parent="SafeArea/VBox/ShellsPanel"]
-unique_name_in_owner = true
+[node name="ShellsLabelRow" type="HBoxContainer" parent="SafeArea/VBox/ShellsPanel"]
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_constants/separation = 10
+
+[node name="ShellIcon" type="TextureRect" parent="SafeArea/VBox/ShellsPanel/ShellsLabelRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("shell_tex")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ShellsLabel" type="Label" parent="SafeArea/VBox/ShellsPanel/ShellsLabelRow"]
+unique_name_in_owner = true
+layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "🐚 0 Shells"
+text = "0 Shells"
 horizontal_alignment = 1
 
 [node name="MessageLabel" type="Label" parent="SafeArea/VBox"]

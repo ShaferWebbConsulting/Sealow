@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://ce4l53xn63f65"]
+[gd_scene load_steps=16 format=3 uid="uid://ce4l53xn63f65"]
 
 [ext_resource type="Script" path="res://scripts/battle/battle_manager.gd" id="1_sm8f8"]
 [ext_resource type="Theme" uid="uid://b6q1s0p8m2w3x" path="res://assets/theme/sealow_theme.tres" id="2_theme"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/ItemPopup.tscn" id="4_itempopup"]
 [ext_resource type="Texture2D" path="res://assets/characters/backgroun_main.png" id="bg_main_tex"]
 [ext_resource type="Texture2D" path="res://assets/characters/sealow_title.png" id="logo_tex"]
+[ext_resource type="Texture2D" path="res://assets/characters/shell.png" id="shell_tex"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_seafloor"]
 bg_color = Color(0.0196078, 0.0588235, 0.0941176, 1)
@@ -508,10 +509,22 @@ theme_override_font_sizes/font_size = 24
 text = "The Crab retreats!"
 horizontal_alignment = 1
 
-[node name="ShellsEarnedLabel" type="Label" parent="VictoryPanel/Center/Panel/VBox"]
-unique_name_in_owner = true
+[node name="ShellsEarnedLabelRow" type="HBoxContainer" parent="VictoryPanel/Center/Panel/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_constants/separation = 10
+
+[node name="ShellIcon" type="TextureRect" parent="VictoryPanel/Center/Panel/VBox/ShellsEarnedLabelRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("shell_tex")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ShellsEarnedLabel" type="Label" parent="VictoryPanel/Center/Panel/VBox/ShellsEarnedLabelRow"]
+unique_name_in_owner = true
+layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "+10 Shells"
 horizontal_alignment = 1

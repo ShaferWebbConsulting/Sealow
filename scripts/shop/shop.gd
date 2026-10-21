@@ -5,6 +5,7 @@ extends Control
 ## only ever earned by winning battles.
 
 const HP_UPGRADE_COST: int = 5
+const SHELL_TEXTURE: Texture2D = preload("res://assets/characters/shell.png")
 
 @onready var shells_label: Label = %ShellsLabel
 @onready var list_vbox: VBoxContainer = %ListVBox
@@ -23,7 +24,7 @@ func _on_back_pressed() -> void:
 
 
 func _refresh() -> void:
-	shells_label.text = "🐚 %d Shells" % SaveManager.player_shells
+	shells_label.text = "%d Shells" % SaveManager.player_shells
 
 	_clear_rows()
 	list_vbox.add_child(_build_hp_row())
@@ -120,11 +121,23 @@ func _build_card(icon_texture: Texture2D, title_text: String, description: Strin
 	cost_row.add_theme_constant_override("separation", 12)
 	info_box.add_child(cost_row)
 
+	var cost_box: HBoxContainer = HBoxContainer.new()
+	cost_box.add_theme_constant_override("separation", 6)
+	cost_row.add_child(cost_box)
+
+	var cost_icon: TextureRect = TextureRect.new()
+	cost_icon.texture = SHELL_TEXTURE
+	cost_icon.custom_minimum_size = Vector2(32, 32)
+	cost_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	cost_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	cost_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cost_box.add_child(cost_icon)
+
 	var cost_label: Label = Label.new()
-	cost_label.text = "%d 🐚" % cost
+	cost_label.text = "%d" % cost
 	cost_label.add_theme_font_size_override("font_size", 24)
 	cost_label.add_theme_color_override("font_color", Color(0.72, 0.42, 0.05, 1))
-	cost_row.add_child(cost_label)
+	cost_box.add_child(cost_label)
 
 	var status_label: Label = Label.new()
 	status_label.text = status_text

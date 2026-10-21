@@ -51,7 +51,7 @@ func _ready() -> void:
 ## Reads authoritative player state from SaveManager.
 ## Called whenever the Main Menu loads and after changing the player's name.
 func update_player_ui() -> void:
-	shells_label.text = "🐚 %d Shells" % SaveManager.player_shells
+	shells_label.text = "%d Shells" % SaveManager.player_shells
 
 	var character_type: String = SaveManager.get_character_type()
 	var player_name: String = SaveManager.get_player_name()
