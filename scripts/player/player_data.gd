@@ -16,7 +16,6 @@ const DEFAULT_SAVE: Dictionary = {
 		"turtle_shield": 1,
 		"trident": 1,
 		"mermaid_scale": 1,
-		"seaweed_circle": 1,
 	},
 	## Persistent player max HP (see Shop's +1 Max HP upgrade). Battle no
 	## longer hardcodes PLAYER_MAX_HP — it always reads this via
